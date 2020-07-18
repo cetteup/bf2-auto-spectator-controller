@@ -2,7 +2,7 @@ const listenPort = process.env.PORT || 8080
 
 const gameserver = require('./gameserver.js');
 const express = require('express');
-const { body, check, matchedData, validationResult } = require('express-validator');
+const { body, checkSchema, matchedData, validationResult } = require('express-validator');
 
 const app = express();
 const http = require('http').Server(app);
@@ -16,7 +16,7 @@ let currentServerIndex;
 let serverToJoinIndex;
 
 app.post('/server/current', [
-	body('app_key').equals(process.env.APP_KEY),
+	body('app_key').equals(process.env.APP_KEY).bail(),
 	body('ip').isIP(),
 	body('port').isPort(),
 	body('password').matches(/^[a-zA-Z0-9_\-]*$/).withMessage("Password contains illegal characters"),
@@ -41,12 +41,31 @@ app.post('/server/current', [
 	});
 });
 
-app.post('/server/join', [
-	check('app_key').equals(process.env.APP_KEY),
-	check('ip').isIP(),
-	check('port').isPort(),
-	check('password').matches(/^[a-zA-Z0-9_\-]*$/).withMessage("Password contains illegal characters")
-], (req, res) => {
+// Use checkSchema because data can be provided in body or query
+app.post('/server/join', checkSchema({
+	app_key: {
+		in: ['body', 'query'],
+		// use custom validator because equals: did not work
+		custom: {
+			options: (value) => {
+				return value === process.env.APP_KEY;
+			}
+		}
+	},
+	ip: {
+		in: ['body', 'query'],
+		isIP: true
+	},
+	port: {
+		in: ['body', 'query'],
+		isPort: true
+	},
+	password: {
+		in: ['body', 'query'],
+		matches: /^[a-zA-Z0-9_\-]*$/,
+		errorMessage: "Password contains illegal characters"
+	}
+}), (req, res) => {
 	// Validate inputs
 	const errors = validationResult(req)
 	if (!errors.isEmpty()) {
