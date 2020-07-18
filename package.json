@@ -4,6 +4,8 @@
   "description": "An online controller for the bf2 auto spectator",
   "main": "server.js",
   "dependencies": {
+    "axios": "^0.19.2",
+    "cheerio": "^1.0.0-rc.3",
     "express": "^4.17.1",
     "express-validator": "^6.6.0"
   },
@@ -16,7 +18,12 @@
     "type": "git",
     "url": "https://github.com/cetteup/bf2-auto-spectator-controller.git"
   },
-  "keywords": ["bf2", "battlefield 2", "spectator", "controller"],
+  "keywords": [
+    "bf2",
+    "battlefield 2",
+    "spectator",
+    "controller"
+  ],
   "author": "cetteup",
   "license": "MIT",
   "bugs": {

@@ -3,9 +3,10 @@ const listenPort = process.env.PORT || 8080
 const gameserver = require('./gameserver.js');
 const express = require('express');
 const { body, query, validationResult } = require('express-validator');
-
 const app = express();
 const http = require('http').Server(app);
+const axios = require('axios');
+const cheerio = require('cheerio');
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
@@ -30,15 +31,16 @@ app.post('/server/current', [
 
 	// Set index
 	currentServerIndex = addServer(req.body.ip, req.body.port, req.body.password, req.body.in_rotation);
-
+	
 	// Remove to join index if to join server is now the current server
 	if (currentServerIndex === serverToJoinIndex) serverToJoinIndex = undefined;
-
+	
 	// Send response
 	res.json({
 		'message': 'Updated current server succesfully',
 		'serverIndex': currentServerIndex
 	});
+	console.log('Current server updated');
 });
 
 app.post('/server/join', [
@@ -116,6 +118,14 @@ app.get('/server/current', (req, res) => {
 	}
 })
 
+app.get('/server/current/name', (req, res) => {
+	if (servers.length > 0 && currentServerIndex !== undefined) {
+		res.send(servers[currentServerIndex].name);
+	} else {
+		res.status(404).send("No servers have been added/specator not on any server");
+	}
+})
+
 app.get('/server/join', (req, res) => {
 	if (servers.length > 0 && serverToJoinIndex !== undefined) {
 		res.send(servers[serverToJoinIndex]);
@@ -137,7 +147,7 @@ function addServer(ip, port, password, in_rotation) {
 
 	// Check if server is already in array (not using function shorthand because array can be empty)
 	servers.forEach(function (existingServer, existingServerIndex) {
-		if (JSON.stringify(existingServer) === JSON.stringify(bf2Server)) {
+		if (existingServer.ip === bf2Server.ip && existingServer.port === bf2Server.port && existingServer.password === bf2Server.password) {
 			serverIndex = existingServerIndex;
 		}
 	});
@@ -147,7 +157,26 @@ function addServer(ip, port, password, in_rotation) {
 		serverIndex = servers.push(bf2Server) - 1;
 	}
 
+	// Fetch server name
+	getServerName(serverIndex);
+
 	return serverIndex;
+}
+
+async function getServerName(serverIndex) {
+	const serverUrl = `https://www.bf2hub.com/server/${servers[serverIndex].ip}:${servers[serverIndex].port}/`;
+	try {
+		const response = await axios.get(serverUrl);
+		const $ = cheerio.load(response.data);
+
+		const heading = $('div#content h3').text();
+		if (heading.length > 0) {
+			servers[serverIndex].name = heading;
+			console.log(servers[serverIndex]);
+		}
+	} catch (error) {
+		console.log(error)
+	}
 }
 
 var server = http.listen(listenPort, () => {
