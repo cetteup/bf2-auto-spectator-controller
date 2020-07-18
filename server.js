@@ -112,8 +112,7 @@ app.get('/server/current', (req, res) => {
 	if (servers.length > 0 && currentServerIndex !== undefined) {
 		res.send(servers[currentServerIndex]);
 	} else {
-		res.status = 404;
-		res.send("No servers have been added/specator not on any server");
+		res.status(404).send("No servers have been added/specator not on any server");
 	}
 })
 
@@ -121,8 +120,7 @@ app.get('/server/join', (req, res) => {
 	if (servers.length > 0 && serverToJoinIndex !== undefined) {
 		res.send(servers[serverToJoinIndex]);
 	} else {
-		res.status = 404;
-		res.send("No servers have been added/no server to join");
+		res.status(404).send("No servers have been added/no server to join");
 	}
 });
 
