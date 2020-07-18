@@ -2,7 +2,7 @@ const listenPort = process.env.PORT || 8080
 
 const gameserver = require('./gameserver.js');
 const express = require('express');
-const { body, checkSchema, matchedData, validationResult } = require('express-validator');
+const { body, query, validationResult } = require('express-validator');
 
 const app = express();
 const http = require('http').Server(app);
@@ -41,42 +41,52 @@ app.post('/server/current', [
 	});
 });
 
-// Use checkSchema because data can be provided in body or query
-app.post('/server/join', checkSchema({
-	app_key: {
-		in: ['body', 'query'],
-		// use custom validator because equals: did not work
-		custom: {
-			options: (value) => {
-				return value === process.env.APP_KEY;
-			}
-		}
-	},
-	ip: {
-		in: ['body', 'query'],
-		isIP: true
-	},
-	port: {
-		in: ['body', 'query'],
-		isPort: true
-	},
-	password: {
-		in: ['body', 'query'],
-		matches: /^[a-zA-Z0-9_\-]*$/,
-		errorMessage: "Password contains illegal characters"
-	}
-}), (req, res) => {
+app.post('/server/join', [
+	body('app_key').equals(process.env.APP_KEY).bail(),
+	body('ip').isIP(),
+	body('port').isPort(),
+	body('password').matches(/^[a-zA-Z0-9_\-]*$/).withMessage("Password contains illegal characters"),
+], (req, res) => {
 	// Validate inputs
 	const errors = validationResult(req)
 	if (!errors.isEmpty()) {
 		return res.status(422).json({ errors: errors.array() });
 	}
 
-	// Get data from body and query
-	const data = matchedData(req, { locations: ['body', 'query'] });
+	// Set index
+	let serverIndex = addServer(req.body.ip, req.body.port, req.body.password, false);
+
+	// Update server to join index (only if index is different from currrent server index)
+	let message;
+	if (serverIndex !== currentServerIndex) {
+		message = 'Specator will join server shortly';
+		serverToJoinIndex = serverIndex;
+	} else {
+		message = 'Spectator is already on requested server';
+	}
+
+	// Send response
+	res.json({
+		'message': message,
+		'serverIndex': serverIndex
+	});
+});
+
+// Allow Moobot to send a join server request via HTTP GET
+app.get('/server/join-moobot', [
+	query('app_key').equals(process.env.APP_KEY).bail(),
+	query('ip').isIP(),
+	query('port').isPort(),
+	query('password').matches(/^[a-zA-Z0-9_\-]*$/).withMessage("Password contains illegal characters"),
+], (req, res) => {
+	// Validate inputs
+	const errors = validationResult(req)
+	if (!errors.isEmpty()) {
+		return res.status(422).json({ errors: errors.array() });
+	}
 
 	// Set index
-	let serverIndex = addServer(data.ip, data.port, data.password, false);
+	let serverIndex = addServer(req.query.ip, req.query.port, req.query.password, false);
 
 	// Update server to join index (only if index is different from currrent server index)
 	let message;
