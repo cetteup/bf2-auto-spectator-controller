@@ -2,7 +2,7 @@ const listenPort = process.env.PORT || 8080
 
 const gameserver = require('./gameserver.js');
 const express = require('express');
-const { body, validationResult } = require('express-validator');
+const { body, check, matchedData, validationResult } = require('express-validator');
 
 const app = express();
 const http = require('http').Server(app);
@@ -42,19 +42,22 @@ app.post('/server/current', [
 });
 
 app.post('/server/join', [
-	body('app_key').equals(process.env.APP_KEY),
-	body('ip').isIP(),
-	body('port').isPort(),
-	body('password').matches(/^[a-zA-Z0-9_\-]*$/).withMessage("Password contains illegal characters")
+	check('app_key').equals(process.env.APP_KEY),
+	check('ip').isIP(),
+	check('port').isPort(),
+	check('password').matches(/^[a-zA-Z0-9_\-]*$/).withMessage("Password contains illegal characters")
 ], (req, res) => {
 	// Validate inputs
 	const errors = validationResult(req)
 	if (!errors.isEmpty()) {
-		return res.status(422).json({ errors: errors.array() })
+		return res.status(422).json({ errors: errors.array() });
 	}
 
+	// Get data from body and query
+	const data = matchedData(req, { locations: ['body', 'query'] });
+
 	// Set index
-	let serverIndex = addServer(req.body.ip, req.body.port, req.body.password, false);
+	let serverIndex = addServer(data.ip, data.port, data.password, false);
 
 	// Update server to join index (only if index is different from currrent server index)
 	let message;
