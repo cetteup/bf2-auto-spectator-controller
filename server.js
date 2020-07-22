@@ -7,6 +7,8 @@ const app = express();
 const http = require('http').Server(app);
 const axios = require('axios');
 const cheerio = require('cheerio');
+const gamedig = require('gamedig');
+const cron = require('node-cron');
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
@@ -16,7 +18,7 @@ let servers = [];
 let currentServerIndex;
 let serverToJoinIndex;
 
-app.post('/server/current', [
+app.post('/servers/current', [
 	body('app_key').equals(process.env.APP_KEY).bail(),
 	body('ip').isIP(),
 	body('port').isPort(),
@@ -43,7 +45,7 @@ app.post('/server/current', [
 	console.log('Current server updated');
 });
 
-app.post('/server/join', [
+app.post('/servers/join', [
 	body('app_key').equals(process.env.APP_KEY).bail(),
 	body('ip').isIP(),
 	body('port').isPort(),
@@ -75,7 +77,7 @@ app.post('/server/join', [
 });
 
 // Allow Moobot to send a join server request via HTTP GET
-app.get('/server/join-moobot', [
+app.get('/servers/join-moobot', [
 	query('app_key').equals(process.env.APP_KEY).bail(),
 	query('ip').isIP(),
 	query('port').isPort(),
@@ -106,11 +108,11 @@ app.get('/server/join-moobot', [
 	});
 });
 
-app.get('/server/all', (req, res) => {
+app.get('/servers', (req, res) => {
 	res.send(servers);
 });
 
-app.get('/server/current', (req, res) => {
+app.get('/servers/current', (req, res) => {
 	if (servers.length > 0 && currentServerIndex !== undefined) {
 		res.send(servers[currentServerIndex]);
 	} else {
@@ -118,7 +120,7 @@ app.get('/server/current', (req, res) => {
 	}
 })
 
-app.get('/server/current/name', (req, res) => {
+app.get('/servers/current/name', (req, res) => {
 	if (servers.length > 0 && currentServerIndex !== undefined) {
 		res.send(servers[currentServerIndex].name);
 	} else {
@@ -126,7 +128,23 @@ app.get('/server/current/name', (req, res) => {
 	}
 })
 
-app.get('/server/join', (req, res) => {
+app.get('/servers/current/map', (req, res) => {
+	if (servers.length > 0 && currentServerIndex !== undefined) {
+		res.send(servers[currentServerIndex].map);
+	} else {
+		res.status(404).send("No servers have been added/specator not on any server");
+	}
+})
+
+app.get('/servers/current/players/total', (req, res) => {
+	if (servers.length > 0 && currentServerIndex !== undefined) {
+		res.send(`${servers[currentServerIndex].players.length}`);
+	} else {
+		res.status(404).send("No servers have been added/specator not on any server");
+	}
+})
+
+app.get('/servers/join', (req, res) => {
 	if (servers.length > 0 && serverToJoinIndex !== undefined) {
 		res.send(servers[serverToJoinIndex]);
 	} else {
@@ -157,27 +175,32 @@ function addServer(ip, port, password, in_rotation) {
 		serverIndex = servers.push(bf2Server) - 1;
 	}
 
-	// Fetch server name
-	getServerName(serverIndex);
+	// Fetch server state
+	getServerState(serverIndex);
 
 	return serverIndex;
 }
 
-async function getServerName(serverIndex) {
-	const serverUrl = `https://www.bf2hub.com/server/${servers[serverIndex].ip}:${servers[serverIndex].port}/`;
-	try {
-		const response = await axios.get(serverUrl);
-		const $ = cheerio.load(response.data);
-
-		const heading = $('div#content h3').text();
-		if (heading.length > 0) {
-			servers[serverIndex].name = heading;
-			console.log(servers[serverIndex]);
-		}
-	} catch (error) {
-		console.log(error)
-	}
+function getServerState(serverIndex) {
+	gamedig.query({
+		type: 'bf2',
+		host: servers[serverIndex].ip
+	}).then((state) => {
+		servers[serverIndex].name = state.name
+		servers[serverIndex].map = state.map
+		servers[serverIndex].ping = state.ping
+		servers[serverIndex].players = state.raw.playerTeamInfo[""]
+	}).catch((error) => {
+		console.log('Gamedig query resulted in an error');
+	});
 }
+
+cron.schedule('*/1 * * * *', () => {
+	if (servers.length > 0 && currentServerIndex !== undefined) {
+		console.log('Updating game server state')
+		getServerState(currentServerIndex);
+	}
+});
 
 var server = http.listen(listenPort, () => {
 	console.log('Listening on port ' + listenPort);
