@@ -22,7 +22,7 @@ app.post('/servers/current', [
 	body('app_key').equals(process.env.APP_KEY).bail(),
 	body('ip').isIP(),
 	body('port').isPort(),
-	body('password').matches(/^[a-zA-Z0-9_\-]*$/).withMessage("Password contains illegal characters"),
+	body('password').matches(/^[a-zA-Z0-9_\-]*$/).withMessage('Password contains illegal characters'),
 	body('in_rotation').isBoolean().toBoolean()
 ], (req, res) => {
 	// Validate inputs
@@ -49,7 +49,7 @@ app.post('/servers/join', [
 	body('app_key').equals(process.env.APP_KEY).bail(),
 	body('ip').isIP(),
 	body('port').isPort(),
-	body('password').matches(/^[a-zA-Z0-9_\-]*$/).withMessage("Password contains illegal characters"),
+	body('password').matches(/^[a-zA-Z0-9_\-]*$/).withMessage('Password contains illegal characters'),
 ], (req, res) => {
 	// Validate inputs
 	const errors = validationResult(req)
@@ -81,7 +81,7 @@ app.get('/servers/join-moobot', [
 	query('app_key').equals(process.env.APP_KEY).bail(),
 	query('ip').isIP(),
 	query('port').isPort(),
-	query('password').matches(/^[a-zA-Z0-9_\-]*$/).withMessage("Password contains illegal characters"),
+	query('password').matches(/^[a-zA-Z0-9_\-]*$/).withMessage('Password contains illegal characters'),
 ], (req, res) => {
 	// Validate inputs
 	const errors = validationResult(req)
@@ -116,7 +116,7 @@ app.get('/servers/current', (req, res) => {
 	if (servers.length > 0 && currentServerIndex !== undefined) {
 		res.send(servers[currentServerIndex]);
 	} else {
-		res.status(404).send("No servers have been added/specator not on any server");
+		res.status(404).send('No servers have been added/specator not on any server');
 	}
 })
 
@@ -124,7 +124,7 @@ app.get('/servers/current/name', (req, res) => {
 	if (servers.length > 0 && currentServerIndex !== undefined) {
 		res.send(servers[currentServerIndex].name);
 	} else {
-		res.status(404).send("No servers have been added/specator not on any server");
+		res.status(404).send('No servers have been added/specator not on any server');
 	}
 })
 
@@ -132,15 +132,38 @@ app.get('/servers/current/map', (req, res) => {
 	if (servers.length > 0 && currentServerIndex !== undefined) {
 		res.send(servers[currentServerIndex].map);
 	} else {
-		res.status(404).send("No servers have been added/specator not on any server");
+		res.status(404).send('No servers have been added/specator not on any server');
+	}
+})
+
+app.get('/servers/current/ping', (req, res) => {
+	if (servers.length > 0 && currentServerIndex !== undefined) {
+		// Find spectator player
+		let specator = servers[currentServerIndex].players.find((player) => {
+			// Check if player name contains spectator name, then check futher if required
+			if (player.name.indexOf(process.env.SPECTATOR_NAME) > -1) {
+				// Split raw name into clan tag and actual account name
+				let nameElements = player.name.split(' ');
+				// Check if account name matches
+				return nameElements[nameElements.length - 1] === process.env.SPECTATOR_NAME;
+			}
+		});
+
+		if (specator !== undefined) {
+			res.send(`${specator.ping}`);
+		} else {
+			res.status(404).send('Spectator not on server');
+		}
+	} else {
+		res.status(404).send('No servers have been added/specator not on any server');
 	}
 })
 
 app.get('/servers/current/players/total', (req, res) => {
 	if (servers.length > 0 && currentServerIndex !== undefined) {
-		res.send(`${servers[currentServerIndex].players.length}`);
+		res.send(`${servers[currentServerIndex].players.length}/${servers[currentServerIndex].maxplayers}`);
 	} else {
-		res.status(404).send("No servers have been added/specator not on any server");
+		res.status(404).send('No servers have been added/specator not on any server');
 	}
 })
 
@@ -148,7 +171,7 @@ app.get('/servers/join', (req, res) => {
 	if (servers.length > 0 && serverToJoinIndex !== undefined) {
 		res.send(servers[serverToJoinIndex]);
 	} else {
-		res.status(404).send("No servers have been added/no server to join");
+		res.status(404).send('No servers have been added/no server to join');
 	}
 });
 
@@ -189,7 +212,8 @@ function getServerState(serverIndex) {
 		servers[serverIndex].name = state.name
 		servers[serverIndex].map = state.map
 		servers[serverIndex].ping = state.ping
-		servers[serverIndex].players = state.raw.playerTeamInfo[""]
+		servers[serverIndex].maxplayers = state.maxplayers
+		servers[serverIndex].players = state.players
 	}).catch((error) => {
 		console.log('Gamedig query resulted in an error');
 	});
