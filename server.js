@@ -228,7 +228,10 @@ function getServerState(serverIndex) {
 		servers[serverIndex].map = state.map
 		servers[serverIndex].ping = state.ping
 		servers[serverIndex].maxplayers = state.maxplayers
-		servers[serverIndex].players = state.players
+		// Add players sorted by score (desc)
+		servers[serverIndex].players = state.players.sort((a, b) => {
+			return b.score - a.score;
+		});
 	}).catch((error) => {
 		console.log('Gamedig query resulted in an error');
 	});
