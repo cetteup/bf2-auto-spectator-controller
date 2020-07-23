@@ -167,6 +167,21 @@ app.get('/servers/current/players/total', (req, res) => {
 	}
 })
 
+app.get('/servers/current/players/summary', (req, res) => {
+	if (servers.length > 0 && currentServerIndex !== undefined) {
+		let humanPlayers = getHumanPlayers(currentServerIndex);
+		res.send({
+			max: servers[currentServerIndex].maxplayers,
+			online: servers[currentServerIndex].players.length,
+			human: humanPlayers.length,
+			active: getActivePlayers(currentServerIndex).length,
+			bots: servers[currentServerIndex].players.length - humanPlayers.length
+		});
+	} else {
+		res.status(404).send('No servers have been added/specator not on any server');
+	}
+})
+
 app.get('/servers/join', (req, res) => {
 	if (servers.length > 0 && serverToJoinIndex !== undefined) {
 		res.send(servers[serverToJoinIndex]);
@@ -216,6 +231,25 @@ function getServerState(serverIndex) {
 		servers[serverIndex].players = state.players
 	}).catch((error) => {
 		console.log('Gamedig query resulted in an error');
+	});
+}
+
+function getHumanPlayers(serverIndex) {
+	// Return all players that are not the spectator and not a placeholder bot (have 0 ping)
+	return servers[serverIndex].players.filter((player) => {
+		// Split raw name into clan tag and actual account name
+		let nameElements = player.name.split(' ');
+		return nameElements[nameElements.length - 1] !== process.env.SPECTATOR_NAME && player.ping !== 0;
+	});
+}
+
+function getActivePlayers(serverIndex) {
+	// Get human players
+	let humanPlayers = getHumanPlayers(serverIndex);
+
+	// Return all players that either have a score other than zero or have died
+	return humanPlayers.filter((player) => {
+		return player.score != 0 || player.score != 0;
 	});
 }
 
