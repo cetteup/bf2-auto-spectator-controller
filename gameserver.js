@@ -1,10 +1,13 @@
+const { query } = require("express");
+
 class GameServer {
-	constructor(ip, port, password, in_rotation) {
+	constructor(ip, query_port) {
 		this.ip = ip;
-		this.port = port;
-		this.password = password;
-		this.in_rotation = in_rotation;
-	}	
+		this.query_port = query_port;
+		this.game_port = -1;
+		this.password = '';
+		this.in_rotation = false;
+	}
 };
 
 module.exports = GameServer;
