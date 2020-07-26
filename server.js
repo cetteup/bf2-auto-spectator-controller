@@ -1,4 +1,6 @@
-const listenPort = process.env.PORT || 8080
+const listenPort = process.env.PORT || 8080;
+const gamedigMaxAttempts = process.env.GAMEDIG_MAX_ATTEMPTS || 1;
+const gamedigSocketTimeout = process.env.GAMEDIG_SOCKET_TIMEOUT || 2000;
 
 const gameserver = require('./gameserver.js');
 const express = require('express');
@@ -18,6 +20,7 @@ let currentServerIndex;
 let serverToJoinIndex;
 
 // Initial game server list build
+console.log('Building game server list');
 buildServerList(process.env.SERVER_LIST_URL);
 
 app.post('/servers/current', [
@@ -248,6 +251,7 @@ function buildServerList(listUrl) {
 	// Fetch server list containing IP and query ports
 	axios.get(listUrl)
 	.then((response) => {
+		console.log(`Got server list with ${response.data.length} game servers`)
 		response.data.forEach((server) => {
 			// Check if gameserver is already known
 			let gameServer = gameServers.find((knownServer) => knownServer.ip === server.ip && knownServer.query_port === server.query_port);
@@ -300,7 +304,8 @@ function getServerState(server) {
 		type: 'bf2',
 		host: server.ip,
 		port: server.query_port,
-		maxAttempts: 3
+		maxAttempts: gamedigMaxAttempts,
+		socketTimeout: gamedigSocketTimeout
 	}).then((state) => {
 		server.game_port = parseInt(state.connect.split(':')[1]);
 		server.name = state.name;
@@ -350,7 +355,10 @@ cron.schedule('0 */12 * * *', () => {
 })
 
 var server = http.listen(listenPort, () => {
-	console.log('Listening on port ' + listenPort);
+	console.log('Listening on port', listenPort);
+	console.log('game server list url is', process.env.SERVER_LIST_URL);
+	console.log('gamedig max attempts is', gamedigMaxAttempts);
+	console.log('gamedig socket timeout is', gamedigSocketTimeout);
 });
 
 exports = module.exports = app;
