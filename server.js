@@ -326,7 +326,7 @@ function getHumanPlayers(gameServer) {
 	return gameServer.players.filter((player) => {
 		// Split raw name into clan tag and actual account name
 		let nameElements = player.name.split(' ');
-		return nameElements[nameElements.length - 1] !== process.env.SPECTATOR_NAME && (player.ping > 0 || player.score !== 0 || player.deaths !== 0);
+		return nameElements[nameElements.length - 1] !== process.env.SPECTATOR_NAME && (player.ping > 0 || player.score !== 0 || player.skill !== 0 || player.deaths !== 0);
 	});
 }
 
@@ -336,7 +336,7 @@ function getActivePlayers(gameServer) {
 
 	// Return all players that either have a score other than zero or have died
 	return humanPlayers.filter((player) => {
-		return player.score != 0 || player.score != 0;
+		return player.score !== 0 || player.skill !== 0 || player.deaths !== 0;
 	});
 }
 
