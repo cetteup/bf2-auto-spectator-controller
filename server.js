@@ -195,6 +195,40 @@ app.get('/servers/current/players/summary', (req, res) => {
 	}
 })
 
+app.get('/servers/current/players/top', [
+	query('count').toInt().customSanitizer(value => {
+		if (value >= 1 && value <= 10) {
+			return value;
+		} else {
+			return 3;
+		}
+	}),
+	query('as_text').toBoolean()
+], (req, res) => {
+	// Validate inputs
+	const errors = validationResult(req)
+	if (!errors.isEmpty()) {
+		return res.status(422).json({ errors: errors.array() });
+	}
+
+	if (gameServers.length > 0 && currentServerIndex !== undefined) {
+		// Get the top n slice of players
+		let players = gameServers[currentServerIndex].players.slice(0, req.query.count);
+
+		// Send text of json response
+		if (req.query.as_text) {
+			// Determine number to pad up to
+			let padTo = String(req.query.count).length;
+			// Build text message (one player per line, format: #[padded index/place]: [player name])
+			res.send(players.map((player, index) => `#${String(index + 1).padStart(padTo, '0')}: ${player.name.trim()}`).join(' - '));
+		} else {
+			res.json(players);
+		}
+	} else {
+		res.status(404).send('No servers have been added/specator not on any server');
+	}
+})
+
 app.get('/servers/join', (req, res) => {
 	if (gameServers.length > 0 && serverToJoinIndex !== undefined) {
 		let gameServer = gameServers[serverToJoinIndex];
