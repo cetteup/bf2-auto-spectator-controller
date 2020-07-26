@@ -321,7 +321,7 @@ function getHumanPlayers(gameServer) {
 	return gameServer.players.filter((player) => {
 		// Split raw name into clan tag and actual account name
 		let nameElements = player.name.split(' ');
-		return nameElements[nameElements.length - 1] !== process.env.SPECTATOR_NAME && player.ping !== 0;
+		return nameElements[nameElements.length - 1] !== process.env.SPECTATOR_NAME && (player.ping > 0 || player.score !== 0 || player.deaths !== 0);
 	});
 }
 
