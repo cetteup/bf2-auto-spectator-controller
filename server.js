@@ -221,9 +221,14 @@ app.get('/servers/current/players/top', [
 		// Send text of json response
 		if (req.query.as_text) {
 			// Determine number to pad up to
-			let padTo = String(req.query.count).length;
-			// Build text message (one player per line, format: #[padded index/place]: [player name])
-			res.send(players.map((player, index) => `#${String(index + 1).padStart(padTo, '0')}: ${player.name.trim()}`).join(' - '));
+			let indexPadTo = String(req.query.count).length;
+			// Build text message (format: #[padded index/place]: [player name])
+			let rankings = players.map((player, index) => {
+				// Determine whether to add space after player tag (no space if no tag)
+				let tagPadTo = player.tag.length > 0 ? player.tag.length + 1 : 0;
+				return `#${String(index + 1).padStart(indexPadTo, '0')}: ${player.tag.padEnd(tagPadTo, ' ')}${player.name}`;
+			});
+			res.send(rankings.join(' - '));
 		} else {
 			res.json(players);
 		}
@@ -313,8 +318,24 @@ function getServerState(server) {
 		server.ping = state.ping;
 		server.maxplayers = state.maxplayers;
 		// Add players sorted by score (desc)
-		server.players = state.players.sort((a, b) => {
+		server.players = [];
+		state.players.sort((a, b) => {
 			return b.score - a.score;
+		}).forEach((player) => {
+			// gamedig does not parse some values (skill/kills and AIBot), so parse now
+			// and while at, fix keys skill => kills, AIBot => aibot and split the name
+			let nameElements = player.name.split(' ');
+			server.players.push({
+				name: nameElements[nameElements.length - 1],
+				tag: nameElements[0],
+				score: player.score,
+				ping: player.ping,
+				team: player.team,
+				deaths: player.deaths,
+				pid: player.pid,
+				kills: parseInt(player.skill),
+				aibot: !!parseInt(player.AIBot)
+			})
 		});
 	}).catch((error) => {
 		console.log('Gamedig query resulted in an error', server.ip, server.query_port);
@@ -324,9 +345,7 @@ function getServerState(server) {
 function getHumanPlayers(gameServer) {
 	// Return all players that are not the spectator and not a placeholder bot (have 0 ping)
 	return gameServer.players.filter((player) => {
-		// Split raw name into clan tag and actual account name
-		let nameElements = player.name.split(' ');
-		return nameElements[nameElements.length - 1] !== process.env.SPECTATOR_NAME && (player.ping > 0 || player.score !== 0 || player.skill !== 0 || player.deaths !== 0);
+		return !player.aibot && player.name !== process.env.SPECTATOR_NAME && (player.ping > 0 || player.score !== 0 || player.kills !== 0 || player.deaths !== 0);
 	});
 }
 
@@ -336,7 +355,7 @@ function getActivePlayers(gameServer) {
 
 	// Return all players that either have a score other than zero or have died
 	return humanPlayers.filter((player) => {
-		return player.score !== 0 || player.skill !== 0 || player.deaths !== 0;
+		return player.score !== 0 || player.kills !== 0 || player.deaths !== 0;
 	});
 }
 
