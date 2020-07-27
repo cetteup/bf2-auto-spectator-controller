@@ -226,9 +226,7 @@ app.get('/servers/current/players/top', [
 			let rankings = players.map((player, index) => {
 				// Determine whether to add space after player tag (no space if no tag)
 				let tagPadTo = player.tag.length > 0 ? player.tag.length + 1 : 0;
-				const text = `#${String(index + 1).padStart(indexPadTo, '0')}: ${player.tag.padEnd(tagPadTo, ' ')}${player.name}`;
-				// "Escape" any dots in text with unprintable characters to avoid player names becoming links in Twitch chat
-				return text.replace('.', '\u00ad.\u200b');
+				return `#${String(index + 1).padStart(indexPadTo, '0')}: ${player.tag.padEnd(tagPadTo, ' ')}${player.name}`;
 			});
 			res.send(rankings.join(' - '));
 		} else {
