@@ -1,14 +1,10 @@
-const listenPort = process.env.PORT || 8080;
-const gamedigMaxAttempts = process.env.GAMEDIG_MAX_ATTEMPTS || 1;
-const gamedigSocketTimeout = process.env.GAMEDIG_SOCKET_TIMEOUT || 2000;
+const listenPort = process.env.PORT || 8181;
 
 const gameserver = require('./gameserver.js');
 const express = require('express');
 const { body, query, validationResult } = require('express-validator');
 const app = express();
-const http = require('http').Server(app);
 const axios = require('axios');
-const gamedig = require('gamedig');
 const cron = require('node-cron');
 
 app.use(express.json())
@@ -18,10 +14,6 @@ app.use(express.urlencoded({ extended: true }))
 let gameServers = [];
 let currentServerIndex;
 let serverToJoinIndex;
-
-// Initial game server list build
-console.log('Building game server list');
-buildServerList(process.env.SERVER_LIST_URL);
 
 app.post('/servers/current', [
 	body('app_key').equals(process.env.APP_KEY).bail(),
@@ -49,7 +41,7 @@ app.post('/servers/current', [
 		message: 'Updated current server succesfully',
 		server: {
 			ip: gameServer.ip,
-			port: gameServer.game_port
+			port: gameServer.gamePort
 		}
 	});
 	console.log('Current server updated');
@@ -84,7 +76,7 @@ app.post('/servers/join', [
 		message: message,
 		server: {
 			ip: gameServer.ip,
-			port: gameServer.game_port
+			port: gameServer.gamePort
 		}
 	});
 });
@@ -119,13 +111,9 @@ app.get('/servers/join-moobot', [
 		message: message,
 		server: {
 			ip: gameServer.ip,
-			port: gameServer.game_port
+			port: gameServer.gamePort
 		}
 	});
-});
-
-app.get('/servers', (req, res) => {
-	res.json(gameServers);
 });
 
 app.get('/servers/current', (req, res) => {
@@ -136,44 +124,6 @@ app.get('/servers/current', (req, res) => {
 	}
 })
 
-app.get('/servers/current/name', (req, res) => {
-	if (gameServers.length > 0 && currentServerIndex !== undefined) {
-		res.send(gameServers[currentServerIndex].name);
-	} else {
-		res.status(404).send('No servers have been added/specator not on any server');
-	}
-})
-
-app.get('/servers/current/map', (req, res) => {
-	if (gameServers.length > 0 && currentServerIndex !== undefined) {
-		res.send(gameServers[currentServerIndex].map);
-	} else {
-		res.status(404).send('No servers have been added/specator not on any server');
-	}
-})
-
-app.get('/servers/current/ping', (req, res) => {
-	if (gameServers.length > 0 && currentServerIndex !== undefined) {
-		// Find spectator player
-		let specator = gameServers[currentServerIndex].players.find((player) => {
-			// Check if player name contains spectator name, then check futher if required
-			if (player.name.indexOf(process.env.SPECTATOR_NAME) > -1) {
-				// Split raw name into clan tag and actual account name
-				let nameElements = player.name.split(' ');
-				// Check if account name matches
-				return nameElements[nameElements.length - 1] === process.env.SPECTATOR_NAME;
-			}
-		});
-
-		if (specator !== undefined) {
-			res.send(`${specator.ping}`);
-		} else {
-			res.status(404).send('Spectator not on server');
-		}
-	} else {
-		res.status(404).send('No servers have been added/specator not on any server');
-	}
-})
 
 app.get('/servers/current/players/total', (req, res) => {
 	if (gameServers.length > 0 && currentServerIndex !== undefined) {
@@ -245,56 +195,29 @@ app.get('/servers/join', (req, res) => {
 		// Only send server details required to join it
 		res.json({
 			ip: gameServer.ip,
-			game_port: gameServer.game_port,
+			gamePort: gameServer.gamePort,
 			password: gameServer.password,
-			in_rotation: gameServer.in_rotation
+			inRotation: gameServer.inRotation
 		});
 	} else {
 		res.status(404).send('No servers have been added/no server to join');
 	}
 });
 
-function buildServerList(listUrl) {
-	// Fetch server list containing IP and query ports
-	axios.get(listUrl)
-	.then((response) => {
-		console.log(`Got server list with ${response.data.length} game servers`)
-		response.data.forEach((server) => {
-			// Check if gameserver is already known
-			let gameServer = gameServers.find((knownServer) => knownServer.ip === server.ip && knownServer.query_port === server.query_port);
-
-			// Add game server if not found
-			if (gameServer === undefined) {
-				// Init gameserver
-				let gameServer = new gameserver(server.ip, parseInt(server.query_port));
-					
-				// Get state
-				getServerState(gameServer);
-
-				// Add server to global array
-				gameServers.push(gameServer);
-			}
-		});
-	})
-	.catch((error) => {
-		console.log('Fetching primary server list resulted in an error', error);
-	});
-}
-
 function addServer(ip, gamePort, password, inRotation) {
 	// Check if server is in global array
-	gameServer = gameServers.find(server => server.ip === ip && server.game_port === gamePort);
+	gameServer = gameServers.find(server => server.ip === ip && server.gamePort === gamePort);
 
 	// Update or add gameserver
 	if (gameServer !== undefined) {
 		gameServer.password = password;
-		gameServer.in_rotation = inRotation;
+		gameServer.inRotation = inRotation;
 	} else {
 		// Unknown server, init server object with default query port
 		gameServer = new gameserver(ip, 29900);
-		gameServer.game_port = gamePort;
+		gameServer.gamePort = gamePort;
 		gameServer.password = password;
-		gameServer.in_rotation = inRotation;
+		gameServer.inRotation = inRotation;
 
 		// Add server to global array
 		gameServers.push(gameServer);
@@ -307,40 +230,33 @@ function addServer(ip, gamePort, password, inRotation) {
 }
 
 function getServerState(server) {
-	gamedig.query({
-		type: 'bf2',
-		host: server.ip,
-		port: server.query_port,
-		maxAttempts: gamedigMaxAttempts,
-		socketTimeout: gamedigSocketTimeout
-	}).then((state) => {
-		server.game_port = parseInt(state.connect.split(':')[1]);
+	axios.get(`https://bflist.io/api/bf2/v1/servers/${server.ip}:${server.gamePort}`)
+	.then((response) => {
+		const state = response.data;
+		server.gamePort = parseInt(state.gamePort);
 		server.name = state.name;
 		server.map = state.map;
-		server.ping = state.ping;
-		server.maxplayers = state.maxplayers;
+		server.maxplayers = parseInt(state.maxPlayers);
 		// Add players sorted by score (desc)
 		server.players = [];
 		state.players.sort((a, b) => {
 			return b.score - a.score;
 		}).forEach((player) => {
-			// gamedig does not parse some values (skill/kills and AIBot), so parse now
-			// and while at, fix keys skill => kills, AIBot => aibot and split the name
-			let nameElements = player.name.split(' ');
 			server.players.push({
-				name: nameElements[nameElements.length - 1],
-				tag: nameElements[0],
-				score: player.score,
-				ping: player.ping,
-				team: player.team,
-				deaths: player.deaths,
-				pid: player.pid,
+				pid: parseInt(player.pid),
+				name: player.name,
+				tag: player.tag,
+				score: parseInt(player.score),
 				kills: parseInt(player.skill),
-				aibot: !!parseInt(player.AIBot)
+				deaths: parseInt(player.deaths),
+				ping: parseInt(player.ping),
+				teamIndex: parseInt(player.teamIndex),
+				teamLabel: player.teamLabel,
+				aibot: player.aitbot
 			})
 		});
 	}).catch((error) => {
-		console.log('Gamedig query resulted in an error', server.ip, server.query_port);
+		console.log(error.message, server.ip, server.query_port);
 	});
 }
 
@@ -362,24 +278,13 @@ function getActivePlayers(gameServer) {
 }
 
 // Update current server's state every minute
-cron.schedule('*/1 * * * *', () => {
+cron.schedule('*/30 * * * * *', () => {
 	if (gameServers.length > 0 && currentServerIndex !== undefined) {
 		console.log('Updating game server state')
 		getServerState(gameServers[currentServerIndex]);
 	}
 });
 
-// Re-build server list every 12 hours
-cron.schedule('0 */12 * * *', () => {
-	console.log('Re-building game server list');
-	buildServerList(process.env.SERVER_LIST_URL);
-})
-
-var server = http.listen(listenPort, () => {
+app.listen(listenPort, () => {
 	console.log('Listening on port', listenPort);
-	console.log('game server list url is', process.env.SERVER_LIST_URL);
-	console.log('gamedig max attempts is', gamedigMaxAttempts);
-	console.log('gamedig socket timeout is', gamedigSocketTimeout);
 });
-
-exports = module.exports = app;
