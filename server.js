@@ -277,8 +277,9 @@ function getActivePlayers(gameServer) {
 	});
 }
 
-// Update current server's state every minute
-cron.schedule('*/30 * * * * *', () => {
+// Update current server's state every 30 seconds
+// (bflist updates at 00 and 30, so get fresh data at 10 and 40)
+cron.schedule('10,40 * * * * *', () => {
 	if (gameServers.length > 0 && currentServerIndex !== undefined) {
 		console.log('Updating game server state')
 		getServerState(gameServers[currentServerIndex]);
