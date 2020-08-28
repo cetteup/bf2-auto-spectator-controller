@@ -16,18 +16,13 @@ let currentServerIndex;
 let serverToJoinIndex;
 
 app.post('/servers/current', [
-	body('app_key').equals(process.env.APP_KEY).bail(),
+	body('app_key').equals(process.env.APP_KEY),
 	body('ip').isIP(),
 	body('port').isPort().toInt(),
 	body('password').matches(/^[a-zA-Z0-9_\-]*$/).withMessage('Password contains illegal characters'),
-	body('in_rotation').isBoolean().toBoolean()
+	body('in_rotation').isBoolean().toBoolean(),
+	validateInputs
 ], (req, res) => {
-	// Validate inputs
-	const errors = validationResult(req)
-	if (!errors.isEmpty()) {
-		return res.status(422).json({ errors: errors.array() });
-	}
-
 	// Add server
 	let gameServer = addServer(req.body.ip, req.body.port, req.body.password, req.body.in_rotation);
 	// Update index
@@ -48,17 +43,12 @@ app.post('/servers/current', [
 });
 
 app.post('/servers/join', [
-	body('app_key').equals(process.env.APP_KEY).bail(),
+	body('app_key').equals(process.env.APP_KEY),
 	body('ip').isIP(),
 	body('port').isPort().toInt(),
 	body('password').matches(/^[a-zA-Z0-9_\-]*$/).withMessage('Password contains illegal characters'),
+	validateInputs
 ], (req, res) => {
-	// Validate inputs
-	const errors = validationResult(req)
-	if (!errors.isEmpty()) {
-		return res.status(422).json({ errors: errors.array() });
-	}
-
 	// Set index
 	let gameServer = addServer(req.body.ip, req.body.port, req.body.password, false);
 
@@ -83,17 +73,12 @@ app.post('/servers/join', [
 
 // Allow Moobot to send a join server request via HTTP GET
 app.get('/servers/join-moobot', [
-	query('app_key').equals(process.env.APP_KEY).bail(),
+	query('app_key').equals(process.env.APP_KEY),
 	query('ip').isIP(),
 	query('port').isPort().toInt(),
 	query('password').matches(/^[a-zA-Z0-9_\-]*$/).withMessage('Password contains illegal characters'),
+	validateInputs
 ], (req, res) => {
-	// Validate inputs
-	const errors = validationResult(req)
-	if (!errors.isEmpty()) {
-		return res.status(422).json({ errors: errors.array() });
-	}
-
 	// Add game server
 	let gameServer = addServer(req.query.ip, req.query.port, req.query.password, false);
 
@@ -156,14 +141,8 @@ app.get('/servers/current/players/top', [
 			return 3;
 		}
 	}),
-	query('as_text').toBoolean()
+	query('as_text').toBoolean(),
 ], (req, res) => {
-	// Validate inputs
-	const errors = validationResult(req)
-	if (!errors.isEmpty()) {
-		return res.status(422).json({ errors: errors.array() });
-	}
-
 	if (gameServers.length > 0 && currentServerIndex !== undefined) {
 		// Get the top n slice of players
 		let players = gameServers[currentServerIndex].players.slice(0, req.query.count);
@@ -204,6 +183,15 @@ app.get('/servers/join', (req, res) => {
 	}
 });
 
+function validateInputs(req, res, next) {
+	// Validate inputs
+	const errors = validationResult(req)
+	if (!errors.isEmpty()) {
+		return res.status(422).json({ errors: errors.array() });
+	}
+	next()
+}
+
 function addServer(ip, gamePort, password, inRotation) {
 	// Check if server is in global array
 	let gameServer = gameServers.find(server => server.ip === ip && server.gamePort === gamePort);
@@ -220,10 +208,10 @@ function addServer(ip, gamePort, password, inRotation) {
 
 		// Add server to global array
 		gameServers.push(gameServer);
-	}
 
-	// Fetch server state
-	getServerState(gameServer);
+		// Fetch server state
+		getServerState(gameServer);
+	}
 
 	return gameServer;
 }
