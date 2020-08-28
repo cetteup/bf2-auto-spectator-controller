@@ -5,10 +5,8 @@
   "main": "server.js",
   "dependencies": {
     "axios": "^0.19.2",
-    "cheerio": "^1.0.0-rc.3",
     "express": "^4.17.1",
     "express-validator": "^6.6.0",
-    "gamedig": "^2.0.21",
     "node-cron": "^2.0.3"
   },
   "devDependencies": {},
