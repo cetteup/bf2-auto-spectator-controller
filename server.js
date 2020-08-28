@@ -1,11 +1,11 @@
 const listenPort = process.env.PORT || 8181;
 
-const gameserver = require('./gameserver.js');
 const express = require('express');
 const { body, query, validationResult } = require('express-validator');
 const app = express();
 const axios = require('axios');
 const cron = require('node-cron');
+const gameserver = require('./gameserver.js');
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
@@ -206,16 +206,15 @@ app.get('/servers/join', (req, res) => {
 
 function addServer(ip, gamePort, password, inRotation) {
 	// Check if server is in global array
-	gameServer = gameServers.find(server => server.ip === ip && server.gamePort === gamePort);
+	let gameServer = gameServers.find(server => server.ip === ip && server.gamePort === gamePort);
 
 	// Update or add gameserver
 	if (gameServer !== undefined) {
 		gameServer.password = password;
 		gameServer.inRotation = inRotation;
 	} else {
-		// Unknown server, init server object with default query port
-		gameServer = new gameserver(ip, 29900);
-		gameServer.gamePort = gamePort;
+		// Unknown server, init server object
+		gameServer = new gameserver(ip, gamePort);
 		gameServer.password = password;
 		gameServer.inRotation = inRotation;
 
@@ -256,7 +255,7 @@ function getServerState(server) {
 			})
 		});
 	}).catch((error) => {
-		console.log(error.message, server.ip, server.query_port);
+		console.log(error.message, server.ip, server.gamePort);
 	});
 }
 
