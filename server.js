@@ -220,27 +220,13 @@ function getServerState(server) {
 	axios.get(`https://bflist.io/api/bf2/v1/servers/${server.ip}:${server.gamePort}`)
 	.then((response) => {
 		const state = response.data;
-		server.gamePort = parseInt(state.gamePort);
+		server.gamePort = state.gamePort;
 		server.name = state.name;
 		server.map = state.map;
-		server.maxplayers = parseInt(state.maxPlayers);
+		server.maxplayers = state.maxPlayers;
 		// Add players sorted by score (desc)
-		server.players = [];
-		state.players.sort((a, b) => {
+		server.players = state.players.sort((a, b) => {
 			return b.score - a.score;
-		}).forEach((player) => {
-			server.players.push({
-				pid: parseInt(player.pid),
-				name: player.name,
-				tag: player.tag,
-				score: parseInt(player.score),
-				kills: parseInt(player.skill),
-				deaths: parseInt(player.deaths),
-				ping: parseInt(player.ping),
-				teamIndex: parseInt(player.teamIndex),
-				teamLabel: player.teamLabel,
-				aibot: player.aitbot
-			})
 		});
 	}).catch((error) => {
 		console.log(error.message, server.ip, server.gamePort);
