@@ -22,11 +22,11 @@ app.post('/servers/current', [
 	body('password').matches(/^[a-zA-Z0-9_\-]*$/).withMessage('Password contains illegal characters'),
 	body('in_rotation').isBoolean().toBoolean(),
 	validateInputs
-], (req, res) => {
+], async (req, res) => {
 	// Add server
-	let gameServer = addServer(req.body.ip, req.body.port, req.body.password, req.body.in_rotation);
+	let gameServer = await addServer(req.body.ip, req.body.port, req.body.password, req.body.in_rotation);
 	// Update index
-	currentServerIndex = gameServers.indexOf(gameServer)
+	currentServerIndex = gameServers.indexOf(gameServer);
 	
 	// Remove to join index if to join server is now the current server
 	if (currentServerIndex === serverToJoinIndex) serverToJoinIndex = undefined;
@@ -47,59 +47,39 @@ app.post('/servers/join', [
 	body('ip').isIP(),
 	body('port').isPort().toInt(),
 	body('password').matches(/^[a-zA-Z0-9_\-]*$/).withMessage('Password contains illegal characters'),
-	validateInputs
-], (req, res) => {
-	// Set index
-	let gameServer = addServer(req.body.ip, req.body.port, req.body.password, false);
-
-	// Update server to join index (only if index is different from currrent server index)
-	let message;
-	if (gameServers.indexOf(gameServer) !== currentServerIndex) {
-		message = 'Specator will join server shortly';
-		serverToJoinIndex = gameServers.indexOf(gameServer);
-	} else {
-		message = 'Spectator is already on requested server';
-	}
-
-	// Send response
-	res.json({
-		message: message,
-		server: {
-			ip: gameServer.ip,
-			port: gameServer.gamePort
-		}
-	});
-});
+	validateInputs,
+], (req, res, next) => {
+	// Transfer server details
+	res.locals = {
+		...res.locals,
+		ip: req.body.ip,
+		port: req.body.port,
+		password: req.body.password
+	};
+	next();
+}, [
+	setJoinServer
+]);
 
 // Allow Moobot to send a join server request via HTTP GET
-app.get('/servers/join-moobot', [
+app.get('/servers/join-chatbot', [
 	query('app_key').equals(process.env.APP_KEY),
 	query('ip').isIP(),
 	query('port').isPort().toInt(),
 	query('password').matches(/^[a-zA-Z0-9_\-]*$/).withMessage('Password contains illegal characters'),
 	validateInputs
-], (req, res) => {
-	// Add game server
-	let gameServer = addServer(req.query.ip, req.query.port, req.query.password, false);
-
-	// Update server to join index (only if index is different from currrent server index)
-	let message;
-	if (gameServers.indexOf(gameServer) !== currentServerIndex) {
-		message = 'Specator will join server shortly';
-		serverToJoinIndex = gameServers.indexOf(gameServer);
-	} else {
-		message = 'Spectator is already on requested server';
-	}
-
-	// Send response
-	res.json({
-		message: message,
-		server: {
-			ip: gameServer.ip,
-			port: gameServer.gamePort
-		}
-	});
-});
+], (req, res, next) => {
+	// Transfer server details
+	res.locals = {
+		...res.locals,
+		ip: req.query.ip,
+		port: req.query.port,
+		password: req.query.password
+	};
+	next();
+}, [
+	setJoinServer
+]);
 
 app.get('/servers/current', (req, res) => {
 	if (gameServers.length > 0 && currentServerIndex !== undefined) {
@@ -107,8 +87,7 @@ app.get('/servers/current', (req, res) => {
 	} else {
 		res.status(404).send('No servers have been added/specator not on any server');
 	}
-})
-
+});
 
 app.get('/servers/current/players/total', (req, res) => {
 	if (gameServers.length > 0 && currentServerIndex !== undefined) {
@@ -116,22 +95,22 @@ app.get('/servers/current/players/total', (req, res) => {
 	} else {
 		res.status(404).send('No servers have been added/specator not on any server');
 	}
-})
+});
 
-app.get('/servers/current/players/summary', (req, res) => {
+app.get('/servers/current/players/summary', async (req, res) => {
 	if (gameServers.length > 0 && currentServerIndex !== undefined) {
-		let humanPlayers = getHumanPlayers(gameServers[currentServerIndex]);
+		let humanPlayers = await getHumanPlayers(gameServers[currentServerIndex]);
 		res.json({
 			max: gameServers[currentServerIndex].maxplayers,
 			online: gameServers[currentServerIndex].players.length,
 			human: humanPlayers.length,
-			active: getActivePlayers(gameServers[currentServerIndex]).length,
+			active: await getActivePlayers(gameServers[currentServerIndex]).length,
 			bots: gameServers[currentServerIndex].players.length - humanPlayers.length
 		});
 	} else {
 		res.status(404).send('No servers have been added/specator not on any server');
 	}
-})
+});
 
 app.get('/servers/current/players/top', [
 	query('count').toInt().customSanitizer(value => {
@@ -166,7 +145,7 @@ app.get('/servers/current/players/top', [
 	} else {
 		res.status(404).send('No servers have been added/specator not on any server');
 	}
-})
+});
 
 app.get('/servers/join', (req, res) => {
 	if (gameServers.length > 0 && serverToJoinIndex !== undefined) {
@@ -183,16 +162,39 @@ app.get('/servers/join', (req, res) => {
 	}
 });
 
-function validateInputs(req, res, next) {
+async function validateInputs(req, res, next) {
 	// Validate inputs
-	const errors = validationResult(req)
+	const errors = validationResult(req);
 	if (!errors.isEmpty()) {
 		return res.status(422).json({ errors: errors.array() });
 	}
-	next()
+	next();
 }
 
-function addServer(ip, gamePort, password, inRotation) {
+async function setJoinServer(req, res) {
+	// Add game server
+	let gameServer = await addServer(res.locals.ip, res.locals.port, res.locals.password, false);
+
+	// Update server to join index (only if index is different from currrent server index)
+	let message;
+	if (gameServers.indexOf(gameServer) !== currentServerIndex) {
+		message = 'Specator will join server shortly';
+		serverToJoinIndex = gameServers.indexOf(gameServer);
+	} else {
+		message = 'Spectator is already on requested server';
+	}
+
+	// Send response
+	res.json({
+		message: message,
+		server: {
+			ip: gameServer.ip,
+			port: gameServer.gamePort
+		}
+	});
+}
+
+async function addServer(ip, gamePort, password, inRotation) {
 	// Check if server is in global array
 	let gameServer = gameServers.find(server => server.ip === ip && server.gamePort === gamePort);
 
@@ -216,33 +218,33 @@ function addServer(ip, gamePort, password, inRotation) {
 	return gameServer;
 }
 
-function getServerState(server) {
+async function getServerState(server) {
 	axios.get(`https://bflist.io/api/bf2/v1/servers/${server.ip}:${server.gamePort}`)
-	.then((response) => {
-		const state = response.data;
-		server.gamePort = state.gamePort;
-		server.name = state.name;
-		server.map = state.map;
-		server.maxplayers = state.maxPlayers;
-		// Add players sorted by score (desc)
-		server.players = state.players.sort((a, b) => {
-			return b.score - a.score;
+		.then((response) => {
+			const state = response.data;
+			server.gamePort = state.gamePort;
+			server.name = state.name;
+			server.map = state.map;
+			server.maxplayers = state.maxPlayers;
+			// Add players sorted by score (desc)
+			server.players = state.players.sort((a, b) => {
+				return b.score - a.score;
+			});
+		}).catch((error) => {
+			console.log(error.message, server.ip, server.gamePort);
 		});
-	}).catch((error) => {
-		console.log(error.message, server.ip, server.gamePort);
-	});
 }
 
-function getHumanPlayers(gameServer) {
+async function getHumanPlayers(gameServer) {
 	// Return all players that are not the spectator and not a placeholder bot (have 0 ping)
 	return gameServer.players.filter((player) => {
 		return !player.aibot && player.name !== process.env.SPECTATOR_NAME && (player.ping > 0 || player.score !== 0 || player.kills !== 0 || player.deaths !== 0);
 	});
 }
 
-function getActivePlayers(gameServer) {
+async function getActivePlayers(gameServer) {
 	// Get human players
-	let humanPlayers = getHumanPlayers(gameServer);
+	let humanPlayers = await getHumanPlayers(gameServer);
 
 	// Return all players that either have a score other than zero or have died
 	return humanPlayers.filter((player) => {
