@@ -1,5 +1,6 @@
 const listenPort = process.env.PORT || 8181;
 
+const compression = require('compression');
 const express = require('express');
 const { body, query, validationResult } = require('express-validator');
 const app = express();
@@ -7,8 +8,9 @@ const axios = require('axios');
 const cron = require('node-cron');
 const gameserver = require('./gameserver.js');
 
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+app.use(compression());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Init server vars
 let gameServers = [];
