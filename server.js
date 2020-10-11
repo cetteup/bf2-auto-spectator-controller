@@ -101,12 +101,13 @@ app.get('/servers/current/players/total', (req, res) => {
 
 app.get('/servers/current/players/summary', async (req, res) => {
 	if (gameServers.length > 0 && currentServerIndex !== undefined) {
-		let humanPlayers = await getHumanPlayers(gameServers[currentServerIndex]);
+		const humanPlayers = await getHumanPlayers(gameServers[currentServerIndex]);
+		const activePlayers = await getActivePlayers(gameServers[currentServerIndex]);
 		res.json({
 			max: gameServers[currentServerIndex].maxplayers,
 			online: gameServers[currentServerIndex].players.length,
 			human: humanPlayers.length,
-			active: await getActivePlayers(gameServers[currentServerIndex]).length,
+			active: activePlayers.length,
 			bots: gameServers[currentServerIndex].players.length - humanPlayers.length
 		});
 	} else {
