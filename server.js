@@ -190,6 +190,27 @@ app.post('/commands', [
 	});
 });
 
+// Allow chatbots to send commands via HTTP GET
+app.get('/commands-chatbot', [
+	query('app_key').equals(process.env.APP_KEY),
+	query('game_restart').toBoolean(),
+	validateInputs
+], (req, res) => {
+	// Get supported commands from request query
+	let commandsToCopy = Object.keys(req.query)
+		.filter((key) => supportedCommands.includes(String(key).toLowerCase()))
+		.reduce((obj, key) => (obj[key] = req.query[key], obj), {});
+	// Copy values to global commands store
+	for (const key in commandsToCopy) {
+		commands[key] = commandsToCopy[key];
+	}
+
+	res.json({
+		message: 'Commands updated successfully',
+		commands: commandsToCopy
+	});
+});
+
 app.get('/commands', [
 	query('app_key').equals(process.env.APP_KEY),
 	validateInputs
