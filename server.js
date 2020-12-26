@@ -1,4 +1,7 @@
 const listenPort = process.env.PORT || 8181;
+const supportedCommands = [
+	'game_restart'
+];
 
 const compression = require('compression');
 const express = require('express');
@@ -16,6 +19,9 @@ app.use(express.urlencoded({ extended: true }));
 let gameServers = [];
 let currentServerIndex;
 let serverToJoinIndex;
+
+// Init command vars
+let commands = {};
 
 app.post('/servers/current', [
 	body('app_key').equals(process.env.APP_KEY),
@@ -163,6 +169,32 @@ app.get('/servers/join', (req, res) => {
 	} else {
 		res.status(404).send('No servers have been added/no server to join');
 	}
+});
+
+app.post('/commands', [
+	body('app_key').equals(process.env.APP_KEY),
+	validateInputs
+], (req, res) => {
+	// Get supported commands from request body
+	let commandsToCopy = Object.keys(req.body)
+		.filter((key) => supportedCommands.includes(String(key).toLowerCase()))
+		.reduce((obj, key) => (obj[key] = req.body[key], obj), {});
+	// Copy values to global commands store
+	for (const key in commandsToCopy) {
+		commands[key] = commandsToCopy[key];
+	}
+
+	res.json({
+		message: 'Commands updated successfully',
+		commands: commandsToCopy
+	});
+});
+
+app.get('/commands', [
+	query('app_key').equals(process.env.APP_KEY),
+	validateInputs
+], (req, res) => {
+	res.json(commands);
 });
 
 async function validateInputs(req, res, next) {
