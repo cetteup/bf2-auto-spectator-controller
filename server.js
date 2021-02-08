@@ -275,7 +275,7 @@ async function addServer(ip, gamePort, password, inRotation) {
 }
 
 async function getServerState(server) {
-	axios.get(`https://bflist.io/api/bf2/v1/servers/${server.ip}:${server.gamePort}`)
+	axios.get(`https://api.bflist.io/bf2/v1/servers/${server.ip}:${server.gamePort}`)
 		.then((response) => {
 			const state = response.data;
 			server.gamePort = state.gamePort;
