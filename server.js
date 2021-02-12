@@ -1,6 +1,8 @@
 const listenPort = process.env.PORT || 8181;
 const supportedCommands = [
-	'game_restart'
+	'game_restart',
+	'pause_rotation',
+	'next_player'
 ];
 
 const compression = require('compression');
@@ -194,6 +196,8 @@ app.post('/commands', [
 app.get('/commands-chatbot', [
 	query('app_key').equals(process.env.APP_KEY),
 	query('game_restart').toBoolean(),
+	query('pause_rotation').toBoolean(),
+	query('next_player').toBoolean(),
 	validateInputs
 ], (req, res) => {
 	// Get supported commands from request query
