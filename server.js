@@ -247,7 +247,7 @@ async function setJoinServer(req, res) {
 	});
 }
 
-async function addServer(ip, gamePort, password, inRotation) {
+async function addServer(ip, gamePort, password = null, inRotation) {
 	// Check if server is in global array
 	let gameServer = gameServers.find(server => server.ip === ip && server.gamePort === gamePort);
 
