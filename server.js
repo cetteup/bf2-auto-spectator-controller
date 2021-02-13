@@ -1,8 +1,8 @@
 const listenPort = process.env.PORT || 8181;
 const supportedCommands = [
-	'game_restart',
-	'pause_rotation',
-	'next_player'
+	{ name: 'game_restart', type: 'boolean' },
+	{ name: 'pause_rotation', type: 'boolean' },
+	{ name: 'next_player', type: 'boolean' }
 ];
 
 const compression = require('compression');
@@ -177,42 +177,35 @@ app.post('/commands', [
 	body('app_key').equals(process.env.APP_KEY),
 	validateInputs
 ], (req, res) => {
-	// Get supported commands from request body
-	let commandsToCopy = Object.keys(req.body)
-		.filter((key) => supportedCommands.includes(String(key).toLowerCase()))
-		.reduce((obj, key) => (obj[key] = req.body[key], obj), {});
-	// Copy values to global commands store
-	for (const key in commandsToCopy) {
-		commands[key] = commandsToCopy[key];
-	}
+	// Save supported commands from request body
+	const savedCommands = saveValidCommands(req.body);
 
-	res.json({
-		message: 'Commands updated successfully',
-		commands: commandsToCopy
-	});
+	if (Object.keys(savedCommands).length > 0) {
+		res.json({
+			message: 'Commands updated successfully',
+			commands: savedCommands
+		});
+	} else {
+		res.status(400).send('No valid commands specified');
+	}
 });
 
 // Allow chatbots to send commands via HTTP GET
 app.get('/commands-chatbot', [
 	query('app_key').equals(process.env.APP_KEY),
-	query('game_restart').toBoolean(),
-	query('pause_rotation').toBoolean(),
-	query('next_player').toBoolean(),
 	validateInputs
 ], (req, res) => {
-	// Get supported commands from request query
-	let commandsToCopy = Object.keys(req.query)
-		.filter((key) => supportedCommands.includes(String(key).toLowerCase()))
-		.reduce((obj, key) => (obj[key] = req.query[key], obj), {});
-	// Copy values to global commands store
-	for (const key in commandsToCopy) {
-		commands[key] = commandsToCopy[key];
-	}
+	// Save supported commands from request query
+	const savedCommands = saveValidCommands(req.query);
 
-	res.json({
-		message: 'Commands updated successfully',
-		commands: commandsToCopy
-	});
+	if (Object.keys(savedCommands).length > 0) {
+		res.json({
+			message: 'Commands updated successfully',
+			commands: savedCommands
+		});
+	} else {
+		res.status(400).send('No valid commands specified');
+	}
 });
 
 app.get('/commands', [
@@ -310,6 +303,26 @@ async function getActivePlayers(gameServer) {
 	return humanPlayers.filter((player) => {
 		return player.score !== 0 || player.kills !== 0 || player.deaths !== 0;
 	});
+}
+
+function saveValidCommands(inputObject) {
+	const supportedCommandNames = supportedCommands.map((cmd) => cmd.name);
+	let commandsToCopy = Object.keys(inputObject).filter((key) => supportedCommandNames.includes(String(key).toLowerCase()));
+	// Copy values to global commands store
+	for (const key of commandsToCopy) {
+		let value = inputObject[key];
+		const cmdIndex = supportedCommandNames.indexOf(key);
+		if (typeof value != supportedCommands[cmdIndex].type) {
+			switch (supportedCommands[cmdIndex].type) {
+				case 'boolean':
+					value = !!Number(value);
+					break;
+			}
+		}
+		commands[key] = value;
+	}
+
+	return Object.fromEntries(commandsToCopy.map((key) => [key, commands[key]]));
 }
 
 // Update current server's state every 20 seconds
