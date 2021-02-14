@@ -2,6 +2,7 @@ const listenPort = process.env.PORT || 8181;
 const supportedCommands = [
 	{ name: 'game_restart', type: 'boolean' },
 	{ name: 'pause_rotation', type: 'boolean' },
+	{ name: 'resume_rotation', type: 'boolean' },
 	{ name: 'next_player', type: 'boolean' }
 ];
 
