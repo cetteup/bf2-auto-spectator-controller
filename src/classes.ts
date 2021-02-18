@@ -28,7 +28,7 @@ export class GameServer {
                 this.map = state.map;
                 this.maxPlayers = state.maxPlayers;
                 // Add players sorted by score (desc)
-                this.players = state.players.sort((a: Player, b: Player) => {
+                this.players = state.players.map((player: IPlayer) => new Player(player)).sort((a: Player, b: Player) => {
                     return b.score - a.score;
                 });
                 // Mark server as initialized if this is the initial successful update
@@ -47,11 +47,24 @@ export class GameServer {
     }
 
     getActivePlayers(): Array<Player> | undefined {
-        return this.getActivePlayers()?.filter(player => player.score !== 0 || player.kills !== 0 || player.deaths !== 0);
+        return this.getHumanPlayers()?.filter(player => player.score !== 0 || player.kills !== 0 || player.deaths !== 0);
     }
 }
 
-export class Player {
+interface IPlayer {
+    pid: number;
+    name: string;
+    tag: string;
+    score: number;
+    kills: number;
+    deaths: number;
+    ping: number;
+    teamIndex: number;
+    teamLabel: string;
+    aibot: boolean;
+}
+
+export class Player implements IPlayer {
     pid: number;
     name: string;
     tag: string;
@@ -63,8 +76,7 @@ export class Player {
     teamLabel: string;
     aibot: boolean;
 
-    constructor(pid: number, name: string, tag: string, score: number, kills: number,
-        deaths: number, ping: number, teamIndex: number, teamLabel: string, aibot: boolean) {
+    constructor({ pid, name, tag, score, kills, deaths, ping, teamIndex, teamLabel, aibot }: IPlayer) {
         this.pid = pid;
         this.name = name;
         this.tag = tag;
@@ -78,7 +90,7 @@ export class Player {
     }
 
     isBot(): boolean {
-        return !this.aibot && this.name !== Config.SPECTATOR_NAME && (this.ping > 0 || this.score !== 0 || this.kills !== 0 || this.deaths !== 0);
+        return this.aibot || this.name === Config.SPECTATOR_NAME || !(this.ping > 0 || this.score !== 0 || this.kills !== 0 || this.deaths !== 0);
     }
 }
 
