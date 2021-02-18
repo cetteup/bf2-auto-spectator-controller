@@ -11,12 +11,28 @@
     "compression": "^1.7.4",
     "express": "^4.17.1",
     "express-validator": "^6.9.2",
-    "node-cron": "^2.0.3"
+    "node-cron": "^2.0.3",
+    "typescript": "^4.1.5"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@tsconfig/node14": "^1.0.0",
+    "@tsconfig/recommended": "^1.0.1",
+    "@types/compression": "^1.7.0",
+    "@types/express": "^4.17.11",
+    "@types/node-cron": "^2.0.3",
+    "@typescript-eslint/eslint-plugin": "^4.15.1",
+    "@typescript-eslint/parser": "^4.15.1",
+    "eslint": "^7.20.0",
+    "nodemon": "^2.0.7"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "build-ts": "tsc -b",
+    "postinstall": "npm run build-ts",
+    "start": "npm run serve",
+    "serve": "node dist/server.js",
+    "watch-node": "nodemon dist/server.js",
+    "watch-ts": "tsc -w",
+    "test": "npx eslint \"src/**\" --fix"
   },
   "repository": {
     "type": "git",
