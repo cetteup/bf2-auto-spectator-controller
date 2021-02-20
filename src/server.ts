@@ -208,9 +208,9 @@ function setJoinServer(req: express.Request, res: express.Response) {
     // Add game server
     const gameServer = new GameServer(res.locals.ip, res.locals.port, res.locals.password, false);
 
-    // Update server to join index (only if index is different from currrent server index)
+    // Update join server if given ip or port differs from current server
     let message;
-    if (gameServer.ip !== currentServer?.ip && gameServer.gamePort !== currentServer?.gamePort) {
+    if (gameServer.ip !== currentServer?.ip || gameServer.gamePort !== currentServer?.gamePort) {
         message = 'Specator will join server shortly';
         serverToJoin = gameServer;
     } else {
