@@ -3,7 +3,7 @@ import express from 'express';
 import { body, query, validationResult } from 'express-validator';
 import * as cron from 'node-cron';
 import { CommandStore, GameServer } from './classes';
-import { Config } from './config';
+import Config from './config';
 import Constants from './constants';
 
 
