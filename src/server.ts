@@ -1,10 +1,11 @@
-import express from 'express';
-
-import * as cron from 'node-cron';
 import compression from 'compression';
+import express from 'express';
 import { body, query, validationResult } from 'express-validator';
+import * as cron from 'node-cron';
+import { CommandStore, GameServer } from './classes';
 import { Config } from './config';
-import { GameServer, CommandStore } from './classes';
+import Constants from './constants';
+
 
 const app = express();
 app.use(compression());
@@ -235,17 +236,26 @@ function saveValidCommands(req: express.Request, res: express.Response) {
         const desiredType = typeof commands[key as keyof typeof commands];
         if (typeof value != desiredType) {
             switch (desiredType) {
-            case 'boolean':
-                value = !!Number(value);
-                break;
+                case 'boolean':
+                    value = !!Number(value);
+                    break;
             }
         }
         commands[key as keyof typeof commands] = value;
     }
 
     if (Object.keys(commandsToCopy).length > 0) {
+        // Use command specific response if only one command is given and specific response is available
+        let message: string;
+        if (commandsToCopy.length == 1 && commandsToCopy[0] in Constants.COMMAND_RESPONSES) {
+            message = Constants.COMMAND_RESPONSES[commandsToCopy[0]];
+        }
+        else {
+            message = 'Commands updated successfully';
+        }
+
         res.json({
-            message: 'Commands updated successfully',
+            message: message,
             commands: Object.fromEntries(commandsToCopy.map((key) => [key, commands[key as keyof typeof commands]]))
         });
     } else {
