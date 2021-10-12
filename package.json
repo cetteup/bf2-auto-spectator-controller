@@ -32,7 +32,7 @@
     "serve": "node dist/server.js",
     "watch-node": "nodemon dist/server.js",
     "watch-ts": "tsc -w",
-    "test": "npx eslint \"src/**\" --fix"
+    "lint": "npx eslint \"src/**\" --fix"
   },
   "repository": {
     "type": "git",
