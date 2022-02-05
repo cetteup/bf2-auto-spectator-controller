@@ -2,7 +2,7 @@ import compression from 'compression';
 import express from 'express';
 import { body, query, validationResult } from 'express-validator';
 import * as cron from 'node-cron';
-import { CommandStore, GameServer } from './classes';
+import { CommandStore, GameServer, Player } from './classes';
 import Config from './config';
 import Constants from './constants';
 
@@ -209,9 +209,11 @@ function setJoinServer(req: express.Request, res: express.Response) {
     // Add game server
     const gameServer = new GameServer(res.locals.ip, res.locals.port, res.locals.password, false);
 
-    // Update join server if given ip or port differs from current server
+    const onCurrentServer = currentServer?.players?.some((p: Player) => p.name == Config.SPECTATOR_NAME);
+
+    // Update join server if given ip, port or password differs from current server or spectator is not actually on the server
     let message;
-    if (gameServer.ip !== currentServer?.ip || gameServer.gamePort !== currentServer?.gamePort) {
+    if (gameServer.ip != currentServer?.ip || gameServer.gamePort != currentServer?.gamePort || gameServer.password != currentServer.password || !onCurrentServer) {
         message = 'Specator will join server shortly';
         serverToJoin = gameServer;
     } else {
