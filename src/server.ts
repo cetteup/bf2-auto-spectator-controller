@@ -5,6 +5,7 @@ import * as cron from 'node-cron';
 import { CommandStore, GameServer, Player } from './classes';
 import Config from './config';
 import Constants from './constants';
+import logger from './logger';
 
 
 const app = express();
@@ -47,7 +48,7 @@ app.post('/servers/current', [
             port: currentServer.gamePort
         }
     });
-    console.log('Current server updated');
+    logger.info('Current server updated', currentServer.ip, currentServer.gamePort);
 });
 
 app.post('/servers/join', [
@@ -269,12 +270,12 @@ function saveValidCommands(req: express.Request, res: express.Response) {
 // Update current server's state every 20 seconds
 // (bflist updates at 00, 20 and 40, so get fresh data at 10, 30 and 50)
 cron.schedule('10,30,50 * * * * *', () => {
-    if (currentServer !== undefined) {
-        console.log('Updating game server state');
+    if (currentServer != undefined) {
+        logger.debug('Updating game server state', currentServer.ip, currentServer.gamePort);
         currentServer.updateState();
     }
 });
 
 app.listen(Config.LISTEN_PORT, () => {
-    console.log('Listening on port', Config.LISTEN_PORT);
+    logger.info('Listening on port', Config.LISTEN_PORT);
 });

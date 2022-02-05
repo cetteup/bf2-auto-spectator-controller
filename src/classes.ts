@@ -1,5 +1,6 @@
 import axios from 'axios';
 import Config from './config';
+import logger from './logger';
 
 export class GameServer {
     ip: string;
@@ -34,7 +35,7 @@ export class GameServer {
                 // Mark server as initialized if this is the initial successful update
                 if (!this.initialized) this.initialized = true;
             }).catch((error) => {
-                console.log(error.message, this.ip, this.gamePort);
+                logger.error('Failed to update game server state', error.message, this.ip, this.gamePort);
             });
     }
 
