@@ -1,0 +1,11 @@
+version: "3.7"
+services:
+  controller:
+    build: .
+    restart: always
+
+    ports:
+      - "8181:8181"
+    environment:
+      - APP_KEY=some_key_only_the_spectator_knows
+      - SPECTATOR_NAME=spectator_account_name

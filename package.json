@@ -28,10 +28,7 @@
   },
   "scripts": {
     "build-ts": "tsc -b",
-    "postinstall": "npm run build-ts",
-    "start": "npm run serve",
-    "serve": "node dist/server.js",
-    "watch-node": "nodemon dist/server.js",
+    "start": "node dist/server.js",
     "watch-ts": "tsc -w",
     "lint": "npx eslint \"src/**\" --fix"
   },
