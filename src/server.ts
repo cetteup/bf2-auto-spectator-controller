@@ -38,8 +38,9 @@ app.post('/servers/current', [
         if (currentServer.ip === serverToJoin?.ip && currentServer.gamePort === serverToJoin?.gamePort) {
             serverToJoin = undefined;
         }
+
+        logger.info('Current server updated', currentServer.ip, currentServer.gamePort);
     }
-	
     // Send response
     res.json({
         message: 'Updated current server succesfully',
@@ -48,7 +49,6 @@ app.post('/servers/current', [
             port: currentServer.gamePort
         }
     });
-    logger.info('Current server updated', currentServer.ip, currentServer.gamePort);
 });
 
 app.post('/servers/join', [
