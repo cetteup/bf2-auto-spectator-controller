@@ -100,4 +100,5 @@ export class CommandStore {
     rotation_pause = false;
     rotation_resume = false;
     next_player = false;
+    respawn = false;
 }
