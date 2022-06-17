@@ -138,9 +138,7 @@ app.get('/servers/current/players/top', [
             const rankings = players?.map((player, index) => {
                 // Determine whether to add space after player tag (no space if no tag)
                 const tagPadTo = player.tag.length > 0 ? player.tag.length + 1 : 0;
-                const text = `#${String(index + 1).padStart(indexPadTo, '0')}: ${player.tag.padEnd(tagPadTo, ' ')}${player.name}`;
-                // Add space after dots so tags/names will not show up as links 
-                return text.replace('.', '. ');
+                return `#${String(index + 1).padStart(indexPadTo, '0')}: ${player.tag.padEnd(tagPadTo, ' ')}${player.name} [${player.teamLabel}]`;
             });
             res.send(rankings?.join(' - '));
         } else {
