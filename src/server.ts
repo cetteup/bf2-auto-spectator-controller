@@ -13,6 +13,15 @@ app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Auth middleware
+app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
+    // Auth header or "app_key" query param should contain the configured app key
+    if (req.get('APP_KEY') != Config.APP_KEY && req.query.app_key != Config.APP_KEY) {
+        res.status(403).send('No valid app key provided');
+    }
+    next();
+});
+
 // Init server vars
 let currentServer: GameServer|undefined;
 let serverToJoin: GameServer|undefined;
@@ -21,7 +30,6 @@ let serverToJoin: GameServer|undefined;
 const commands = new CommandStore();
 
 app.post('/servers/current', [
-    body('app_key').equals(Config.APP_KEY),
     body('ip').isIP(),
     body('port').isPort().toInt(),
     body('password').matches(/^[a-zA-Z0-9_-]*$/).withMessage('Password contains illegal characters'),
@@ -52,7 +60,6 @@ app.post('/servers/current', [
 });
 
 app.post('/servers/join', [
-    body('app_key').equals(Config.APP_KEY),
     body('ip').isIP(),
     body('port').isPort().toInt(),
     body('password').matches(/^[a-zA-Z0-9_-]*$/).withMessage('Password contains illegal characters'),
@@ -70,7 +77,6 @@ app.post('/servers/join', [
 
 // Allow Moobot to send a join server request via HTTP GET
 app.get('/servers/join-chatbot', [
-    query('app_key').equals(Config.APP_KEY),
     query('ip').isIP(),
     query('port').isPort().toInt(),
     query('password').matches(/^[a-zA-Z0-9_-]*$/).withMessage('Password contains illegal characters'),
@@ -90,7 +96,7 @@ app.get('/servers/current', (req: express.Request, res: express.Response) => {
     if (currentServer !== undefined) {
         res.json(currentServer);
     } else {
-        res.status(404).send('No servers have been added/specator not on any server');
+        res.status(404).send('No servers have been added/spectator not on any server');
     }
 });
 
@@ -98,7 +104,7 @@ app.get('/servers/current/players/total', (req: express.Request, res: express.Re
     if (currentServer?.initialized) {
         res.send(`${currentServer.players?.length}/${currentServer.maxPlayers}`);
     } else {
-        res.status(404).send('No servers have been added/specator not on any server');
+        res.status(404).send('No servers have been added/spectator not on any server');
     }
 });
 
@@ -112,7 +118,7 @@ app.get('/servers/current/players/summary', async (req: express.Request, res: ex
             bots: currentServer.getBots()?.length
         });
     } else {
-        res.status(404).send('No servers have been added/specator not on any server');
+        res.status(404).send('No servers have been added/spectator not on any server');
     }
 });
 
@@ -145,7 +151,7 @@ app.get('/servers/current/players/top', [
             res.json(players);
         }
     } else {
-        res.status(404).send('No servers have been added/specator not on any server');
+        res.status(404).send('No servers have been added/spectator not on any server');
     }
 });
 
@@ -163,10 +169,7 @@ app.get('/servers/join', (req: express.Request, res: express.Response) => {
     }
 });
 
-app.post('/commands', [
-    body('app_key').equals(Config.APP_KEY),
-    validateInputs
-], (req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.post('/commands', (req: express.Request, res: express.Response, next: express.NextFunction) => {
     // Transfer given commands from request body
     res.locals = {
         ...res.locals,
@@ -176,10 +179,7 @@ app.post('/commands', [
 }, saveValidCommands);
 
 // Allow chatbots to send commands via HTTP GET
-app.get('/commands-chatbot', [
-    query('app_key').equals(Config.APP_KEY),
-    validateInputs
-], (req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.get('/commands-chatbot', (req: express.Request, res: express.Response, next: express.NextFunction) => {
     // Transfer given commands from request query
     res.locals = {
         ...res.locals,
@@ -188,10 +188,7 @@ app.get('/commands-chatbot', [
     next();
 }, saveValidCommands);
 
-app.get('/commands', [
-    query('app_key').equals(Config.APP_KEY),
-    validateInputs
-], (req: express.Request, res: express.Response) => {
+app.get('/commands', (req: express.Request, res: express.Response) => {
     res.json(commands);
 });
 
