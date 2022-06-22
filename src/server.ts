@@ -17,7 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
     // Auth header or "app_key" query param should contain the configured app key
     if (req.get('APP_KEY') != Config.APP_KEY && req.query.app_key != Config.APP_KEY) {
-        res.status(403).send('No valid app key provided');
+        return res.status(403).send('No valid app key provided');
     }
     next();
 });
