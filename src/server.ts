@@ -1,13 +1,13 @@
 import compression from 'compression';
 import express from 'express';
-import {body, query, validationResult} from 'express-validator';
+import { body, query, validationResult } from 'express-validator';
 import * as cron from 'node-cron';
-import {GameServer, Player} from './classes';
+import { GameServer, Player } from './classes';
 import Config from './config';
 import Constants from './constants';
-import logger, {asyncLocalStorage} from './logger';
-import {CommandStore} from './typing';
-import {customAlphabet} from 'nanoid';
+import logger, { asyncLocalStorage } from './logger';
+import { CommandStore } from './typing';
+import { customAlphabet } from 'nanoid';
 
 const app = express();
 app.use(compression());
