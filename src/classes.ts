@@ -4,7 +4,7 @@ import logger from './logger';
 
 export class GameServer {
     ip: string;
-    gamePort: number;
+    port: number;
     password: string | null;
     inRotation: boolean;
 
@@ -14,15 +14,15 @@ export class GameServer {
     maxPlayers: number | undefined;
     players: Array<Player> | undefined;
 
-    constructor(ip: string, gamePort: number, password: string | null = null, inRotation = false) {
+    constructor(ip: string, port: number, password: string | null = null, inRotation = false) {
         this.ip = ip;
-        this.gamePort = gamePort;
+        this.port = port;
         this.password = password;
         this.inRotation = inRotation;
     }
 
     updateState(): void {
-        axios.get(`https://api.bflist.io/bf2/v1/servers/${this.ip}:${this.gamePort}`)
+        axios.get(`https://api.bflist.io/bf2/v1/servers/${this.ip}:${this.port}`)
             .then((response) => {
                 const state = response.data;
                 this.name = state.name;
@@ -35,7 +35,7 @@ export class GameServer {
                 // Mark server as initialized if this is the initial successful update
                 if (!this.initialized) this.initialized = true;
             }).catch((error) => {
-                logger.error('Failed to update game server state', error.message, this.ip, this.gamePort);
+                logger.error('Failed to update game server state', error.message, this.ip, this.port);
             });
     }
 

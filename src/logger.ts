@@ -5,7 +5,7 @@ import Config from './config';
 const asyncLocalStorage: AsyncLocalStorage<{ 'requestId': string }> = new AsyncLocalStorage();
 
 const logger: Logger = new Logger({
-    name: 'ServerLogger',
+    name: 'MainLogger',
     minLevel: Config.LOG_LEVEL as TLogLevelName,
     displayFunctionName: false,
     displayFilePath: 'hidden',
