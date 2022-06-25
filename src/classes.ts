@@ -94,11 +94,3 @@ export class Player implements IPlayer {
         return this.aibot || this.name === Config.SPECTATOR_NAME || !(this.ping > 0 || this.score !== 0 || this.kills !== 0 || this.deaths !== 0);
     }
 }
-
-export class CommandStore {
-    game_restart = false;
-    rotation_pause = false;
-    rotation_resume = false;
-    next_player = false;
-    respawn = false;
-}

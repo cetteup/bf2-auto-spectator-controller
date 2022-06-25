@@ -1,12 +1,12 @@
 import compression from 'compression';
 import express from 'express';
-import { body, query, validationResult } from 'express-validator';
+import {body, query, validationResult} from 'express-validator';
 import * as cron from 'node-cron';
-import { CommandStore, GameServer, Player } from './classes';
+import {GameServer, Player} from './classes';
 import Config from './config';
 import Constants from './constants';
 import logger from './logger';
-
+import {CommandStore} from './typing';
 
 const app = express();
 app.use(compression());
@@ -27,7 +27,13 @@ let currentServer: GameServer|undefined;
 let serverToJoin: GameServer|undefined;
 
 // Init command vars
-const commands = new CommandStore();
+const commands: CommandStore = {
+    game_restart: false,
+    rotation_pause: false,
+    rotation_resume: false,
+    next_player: false,
+    respawn: false
+};
 
 app.post('/servers/current', [
     body('ip').isIP(),
@@ -227,26 +233,33 @@ function setJoinServer(req: express.Request, res: express.Response) {
 }
 
 function saveValidCommands(req: express.Request, res: express.Response) {
-    const commandsToCopy = Object.keys(res.locals.givenCommands).filter((key) => Object.keys(commands).includes(String(key).toLowerCase()));
-    // Copy values to global commands store
-    for (const key of commandsToCopy) {
-        let value = res.locals.givenCommands[key];
-        const desiredType = typeof commands[key as keyof typeof commands];
-        if (typeof value != desiredType) {
-            switch (desiredType) {
-                case 'boolean':
-                    value = !!Number(value);
-                    break;
+    // Copy values of valid commands to global commands store
+    const copiedCommands: string[] = [];
+    for (const key in res.locals.givenCommands) {
+        if (key in commands) {
+            let value = res.locals.givenCommands[key];
+            const desiredType = typeof commands[key];
+            if (typeof value != desiredType) {
+                switch (desiredType) {
+                    case 'boolean':
+                        value = !!Number(value);
+                        break;
+                }
             }
+            logger.debug('Storing valid command', key, value);
+            commands[key] = value;
+            copiedCommands.push(key);
         }
-        commands[key as keyof typeof commands] = value;
+        else {
+            logger.debug('Ignoring invalid command', key, res.locals.givenCommands[key]);
+        }
     }
 
-    if (Object.keys(commandsToCopy).length > 0) {
+    if (copiedCommands.length > 0) {
         // Use command specific response if only one command is given and specific response is available
         let message: string;
-        if (commandsToCopy.length == 1 && commandsToCopy[0] in Constants.COMMAND_RESPONSES) {
-            message = Constants.COMMAND_RESPONSES[commandsToCopy[0]];
+        if (copiedCommands.length == 1 && copiedCommands[0] in Constants.COMMAND_RESPONSES) {
+            message = Constants.COMMAND_RESPONSES[copiedCommands[0]];
         }
         else {
             message = 'Commands updated successfully';
@@ -254,12 +267,11 @@ function saveValidCommands(req: express.Request, res: express.Response) {
 
         res.json({
             message: message,
-            commands: Object.fromEntries(commandsToCopy.map((key) => [key, commands[key as keyof typeof commands]]))
+            commands: Object.fromEntries(copiedCommands.map((key) => [key, commands[key]]))
         });
     } else {
         res.status(400).send('No valid commands specified');
     }
-    return ;
 }
 
 // Update current server's state every 20 seconds
