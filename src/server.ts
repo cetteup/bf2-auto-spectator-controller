@@ -5,13 +5,22 @@ import * as cron from 'node-cron';
 import {GameServer, Player} from './classes';
 import Config from './config';
 import Constants from './constants';
-import logger from './logger';
+import logger, {asyncLocalStorage} from './logger';
 import {CommandStore} from './typing';
+import {customAlphabet} from 'nanoid';
 
 const app = express();
 app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Logging setup middleware
+app.use(async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const requestId: string = customAlphabet('1234567890abcdefghijklmnopqrstuvwxyz', 6)();
+    await asyncLocalStorage.run({ requestId },  async () => {
+        return next();
+    });
+});
 
 // Auth middleware
 app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
