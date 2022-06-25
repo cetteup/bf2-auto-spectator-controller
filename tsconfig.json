@@ -7,10 +7,5 @@
             "node_modules/@types"
         ],
         "moduleResolution": "node"
-    },
-    "files": [
-        "src/classes.ts",
-        "src/config.ts",
-        "src/server.ts"
-    ]
+    }
 }
