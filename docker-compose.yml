@@ -7,5 +7,7 @@ services:
     ports:
       - "8181:8181"
     environment:
-      - APP_KEY=some_key_only_the_spectator_knows
+      - SPECTATOR_CHANNEL=spectator_twitch_channel
+      - CHATBOT_USERNAME=chatbot_username
+      - CHATBOT_OAUTH_TOKEN=chatbot_oauth_token
       - SPECTATOR_NAME=spectator_account_name

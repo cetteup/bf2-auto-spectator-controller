@@ -14,6 +14,6 @@ RUN npm run build-ts
 
 RUN npm prune --production
 
-CMD ["node", "dist/server.js"]
+CMD ["node", "dist/index.js"]
 
 EXPOSE 8181
