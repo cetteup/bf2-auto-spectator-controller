@@ -68,9 +68,11 @@ class Controller {
     private async handleCommand(tags: tmi.Userstate, command: string, args: string[]): Promise<void> {
         const handler = this.handlers.find((c) => c.commandNames.includes(command));
 
+        if (!handler) return;
+
         this.logger.info(tags.username, 'issued command', command, ...args);
 
-        if (!handler || !authorize(tags, handler.permittedRoles, command)) return;
+        if (!authorize(tags, handler.permittedRoles, command)) return;
 
         return handler.execute(this.io, this.client, this.state, args);
     }
