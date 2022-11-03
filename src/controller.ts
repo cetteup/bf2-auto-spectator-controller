@@ -6,17 +6,11 @@ import logger from './logger';
 import { CommandHandler } from './handlers/typing';
 import { authorize } from './permissions';
 import { ControllerState, ServerDTO } from './typing';
-import { joinserver } from './handlers/managed/joinserver';
+import { next, respawn, restart, resume, stay } from './handlers/forwarded';
+import { joinserver, players, top } from './handlers/managed';
 import { GameServer } from './classes';
-import { next } from './handlers/forwarded/next';
-import { respawn } from './handlers/forwarded/respawn';
-import { restart } from './handlers/forwarded/restart';
-import { resume } from './handlers/forwarded/resume';
-import { stay } from './handlers/forwarded/stay';
 import { Logger } from 'tslog';
 import * as cron from 'node-cron';
-import { players } from './handlers/managed/players';
-import { top } from './handlers/managed/top';
 
 class Controller {
     private logger: Logger;
@@ -49,7 +43,10 @@ class Controller {
             logger: this.logger.getChildLogger({ name: 'tmiLogger' })
         });
 
-        this.handlers = [next, respawn, restart, resume, stay, joinserver, players, top];
+        this.handlers = [
+            next, respawn, restart, resume, stay,
+            joinserver, players, top
+        ];
 
         this.state = {};
 
@@ -74,7 +71,7 @@ class Controller {
 
         if (!authorize(tags, handler.permittedRoles, command)) return;
 
-        return handler.execute(this.io, this.client, this.state, args);
+        return handler.execute(this.client, this.io, this.state, args);
     }
 
     private setupEventListeners(): void {

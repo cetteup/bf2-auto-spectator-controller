@@ -7,5 +7,5 @@ export type CommandHandler = {
     command: string
     aliases?: string[]
     permittedRoles: Role[]
-    execute: (io: socketio.Server, client: tmi.Client, state: ControllerState, args: string[]) => Promise<void>
+    execute: (client: tmi.Client, io: socketio.Server, state: ControllerState, args: string[]) => Promise<void>
 }
