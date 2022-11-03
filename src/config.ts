@@ -5,4 +5,5 @@ export default abstract class Config {
     static readonly CHATBOT_USERNAME: string = process.env.CHATBOT_USERNAME || '';
     static readonly CHATBOT_OAUTH_TOKEN: string = process.env.CHATBOT_OAUTH_TOKEN || '';
     static readonly SPECTATOR_NAME: string = process.env.SPECTATOR_NAME || 'twitch.tv/BF2tv';
+    static readonly DISABLED_COMMANDS: string[] = process.env.DISABLED_COMMANDS?.split(' ') || [];
 }

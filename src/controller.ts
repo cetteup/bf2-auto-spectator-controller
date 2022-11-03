@@ -68,7 +68,7 @@ class Controller {
     private async handleCommand(tags: tmi.Userstate, command: string, args: string[]): Promise<void> {
         const handler = this.handlers.find((h) => h.command == command || h.aliases?.includes(command));
 
-        if (!handler) return;
+        if (!handler || Config.DISABLED_COMMANDS.includes(handler.command)) return;
 
         this.logger.info(tags.username, 'issued command', command, ...args);
 
