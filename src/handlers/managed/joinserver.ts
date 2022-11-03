@@ -8,7 +8,8 @@ import { ServerDTO } from '../../typing';
 import { handlerLogger } from '../common';
 
 export const joinserver: CommandHandler = {
-    commandNames: ['joinserver', 'switchserver'],
+    command: 'joinserver',
+    aliases: ['switchserver'],
     permittedRoles: [Role.Moderator],
     execute: async (io, client, state, args) => {
         const [ip, port, password] = args;

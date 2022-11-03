@@ -66,7 +66,7 @@ class Controller {
     }
 
     private async handleCommand(tags: tmi.Userstate, command: string, args: string[]): Promise<void> {
-        const handler = this.handlers.find((c) => c.commandNames.includes(command));
+        const handler = this.handlers.find((h) => h.command == command || h.aliases?.includes(command));
 
         if (!handler) return;
 

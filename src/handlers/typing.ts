@@ -4,7 +4,8 @@ import { Role } from '../permissions';
 import { ControllerState } from '../typing';
 
 export type CommandHandler = {
-    commandNames: string[]
+    command: string
+    aliases?: string[]
     permittedRoles: Role[]
     execute: (io: socketio.Server, client: tmi.Client, state: ControllerState, args: string[]) => Promise<void>
 }

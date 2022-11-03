@@ -3,7 +3,7 @@ import { Role } from '../../permissions';
 import Config from '../../config';
 
 export const top: CommandHandler = {
-    commandNames: ['top'],
+    command: 'top',
     permittedRoles: [Role.Viewer, Role.Subscriber, Role.VIP, Role.Moderator],
     execute: async (io, client, state, args) => {
         if (!state.currentServer?.initialized) {
