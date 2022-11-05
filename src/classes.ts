@@ -12,6 +12,7 @@ export class GameServer {
     name: string | undefined;
     map: string | undefined;
     maxPlayers: number | undefined;
+    joinLinkWeb: string | undefined;
     players: Array<Player> | undefined;
 
     constructor(ip: string, port: number, password: string | null = null, inRotation = false) {
@@ -28,6 +29,7 @@ export class GameServer {
                 this.name = state.name;
                 this.map = state.map;
                 this.maxPlayers = state.maxPlayers;
+                this.joinLinkWeb = state.joinLinkWeb;
                 // Add players sorted by score (desc)
                 this.players = state.players.map((player: IPlayer) => new Player(player)).sort((a: Player, b: Player) => {
                     return b.score - a.score;

@@ -55,6 +55,22 @@ export const server: CommandHandler = {
     }
 };
 
+export const join: CommandHandler = {
+    command: 'join',
+    permittedRoles: [Role.Viewer, Role.Subscriber, Role.VIP, Role.Moderator],
+    execute: async (client, io, state) => {
+        if (!state.currentServer?.initialized) {
+            await client.say(Config.SPECTATOR_CHANNEL, 'Whoops, spectator is not on a server');
+            return;
+        }
+        if (!state.currentServer.joinLinkWeb) {
+            await client.say(Config.SPECTATOR_CHANNEL, 'Sorry, current server is not supported by joinme.click');
+            return;
+        }
+        await client.say(Config.SPECTATOR_CHANNEL, `Join the action with two clicks: ${state.currentServer.joinLinkWeb}`);
+    }
+};
+
 export const players: CommandHandler = {
     command: 'players',
     permittedRoles: [Role.Viewer, Role.Subscriber, Role.VIP, Role.Moderator],
