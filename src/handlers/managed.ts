@@ -42,6 +42,19 @@ export const joinserver: CommandHandler = {
     }
 };
 
+export const server: CommandHandler = {
+    command: 'server',
+    aliases: ['currentserver'],
+    permittedRoles: [Role.Viewer, Role.Subscriber, Role.VIP, Role.Moderator],
+    execute: async (client, io, state) => {
+        if (!state.currentServer?.initialized) {
+            await client.say(Config.SPECTATOR_CHANNEL, 'Whoops, spectator is not on a server');
+            return;
+        }
+        await client.say(Config.SPECTATOR_CHANNEL, `Currently spectating on: ${state.currentServer.name} - bf2.tv/servers/${state.currentServer.ip}:${state.currentServer.port}`);
+    }
+};
+
 export const players: CommandHandler = {
     command: 'players',
     permittedRoles: [Role.Viewer, Role.Subscriber, Role.VIP, Role.Moderator],
