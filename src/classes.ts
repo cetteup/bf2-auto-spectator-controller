@@ -10,7 +10,8 @@ export class GameServer {
 
     initialized = false;
     name: string | undefined;
-    map: string | undefined;
+    mapName: string | undefined;
+    mapSize: number | undefined;
     maxPlayers: number | undefined;
     joinLinkWeb: string | undefined;
     players: Array<Player> | undefined;
@@ -27,7 +28,8 @@ export class GameServer {
             .then((response) => {
                 const state = response.data;
                 this.name = state.name;
-                this.map = state.map;
+                this.mapName = state.mapName;
+                this.mapSize = state.mapSize;
                 this.maxPlayers = state.maxPlayers;
                 this.joinLinkWeb = state.joinLinkWeb;
                 // Add players sorted by score (desc)

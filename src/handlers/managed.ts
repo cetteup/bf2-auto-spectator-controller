@@ -115,3 +115,16 @@ export const top: CommandHandler = {
         await client.say(Config.SPECTATOR_CHANNEL, rankings.join(', '));
     }
 };
+
+export const map: CommandHandler = {
+    command: 'map',
+    aliases: ['currentmap'],
+    permittedRoles: [Role.Viewer, Role.Subscriber, Role.VIP, Role.Moderator],
+    execute: async (client, io, state) => {
+        if (!state.currentServer?.initialized) {
+            await client.say(Config.SPECTATOR_CHANNEL, 'Whoops, spectator is not on a server');
+            return;
+        }
+        await client.say(Config.SPECTATOR_CHANNEL, `The current map is: ${state.currentServer.mapName} (${state.currentServer.mapSize})`);
+    }
+};
