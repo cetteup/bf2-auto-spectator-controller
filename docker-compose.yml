@@ -9,5 +9,5 @@ services:
     environment:
       - SPECTATOR_CHANNEL=spectator_twitch_channel
       - CHATBOT_USERNAME=chatbot_username
-      - CHATBOT_OAUTH_TOKEN=chatbot_oauth_token
+      - CHATBOT_OAUTH_ACCESS_TOKEN=chatbot_oauth_token
       - SPECTATOR_NAME=spectator_account_name
