@@ -17,3 +17,11 @@ export type ControllerState = {
     currentServer?: GameServer
     serverToJoin?: GameServer
 }
+
+export type TwitchTokenResponse = {
+    access_token: string
+    expires_in: number
+    refresh_token: string
+    scope: string[]
+    token_type: string
+}

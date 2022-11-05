@@ -5,15 +5,22 @@ import Config from './config';
 import logger from './logger';
 import { CommandHandler } from './handlers/typing';
 import { authorize } from './permissions';
-import { ControllerState, ServerDTO } from './typing';
+import { ControllerState, ServerDTO, TwitchTokenResponse } from './typing';
 import { next, respawn, restart, resume, stay } from './handlers/forwarded';
 import { joinserver, players, top } from './handlers/managed';
 import { GameServer } from './classes';
 import { Logger } from 'tslog';
 import * as cron from 'node-cron';
+import axios from 'axios';
+import { formatOAuthPassword, isAccessTokenValid } from './utils';
 
 class Controller {
     private logger: Logger;
+
+    private oauthTokens: {
+        access: string
+        refresh?: string
+    };
 
     private readonly server: http.Server;
     private readonly io: socketio.Server;
@@ -28,13 +35,18 @@ class Controller {
     constructor() {
         this.logger = logger.getChildLogger({ name: 'ControllerLogger' });
 
+        this.oauthTokens = {
+            access: Config.CHATBOT_OAUTH_ACCESS_TOKEN,
+            refresh: Config.CHATBOT_OAUTH_REFRESH_TOKEN
+        };
+
         this.server = http.createServer();
         this.io = new socketio.Server(this.server);
         this.client = new tmi.Client({
             connection: { reconnect: true },
             identity: {
                 username: Config.CHATBOT_USERNAME,
-                password: `oauth:${Config.CHATBOT_OAUTH_TOKEN}`
+                password: () => this.getClientPassword()
             },
             channels: [Config.SPECTATOR_CHANNEL],
             options: {
@@ -60,6 +72,41 @@ class Controller {
         }, {
             scheduled: false
         });
+    }
+
+    private async getClientPassword(): Promise<string> {
+        // Return current access token if refresh is not possible or access token is still valid
+        if (!Config.TWITCH_CLIENT_ID || !Config.TWITCH_CLIENT_SECRET || !this.oauthTokens.refresh || await isAccessTokenValid(this.oauthTokens.access)) {
+            return formatOAuthPassword(this.oauthTokens.access);
+        }
+
+        const params = new URLSearchParams({
+            client_id: Config.TWITCH_CLIENT_ID,
+            client_secret: Config.TWITCH_CLIENT_SECRET,
+            grant_type: 'refresh_token',
+            refresh_token: this.oauthTokens.refresh
+        });
+
+        try {
+            const resp = await axios.post('https://id.twitch.tv/oauth2/token', params, {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            });
+            const data: TwitchTokenResponse = resp.data;
+            this.oauthTokens = {
+                access: data.access_token,
+                refresh: data.refresh_token
+            };
+            this.logger.debug('Successfully refreshed chatbot access token');
+        }
+        catch (e: any) {
+            this.logger.error('Failed to refresh chatbot access token:', e.message);
+        }
+
+        // We can't really handle any errors during the refresh (e.g. Twitch offline, refresh token invalid),
+        // so just return the current access token (refreshed or not)
+        return formatOAuthPassword(this.oauthTokens.access);
     }
 
     private async handleCommand(tags: tmi.Userstate, command: string, args: string[]): Promise<void> {
