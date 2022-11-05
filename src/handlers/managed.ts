@@ -45,7 +45,7 @@ export const joinserver: CommandHandler = {
 export const server: CommandHandler = {
     command: 'server',
     aliases: ['currentserver'],
-    permittedRoles: [Role.Viewer, Role.Subscriber, Role.VIP, Role.Moderator],
+    permittedRoles: [Role.Viewer],
     execute: async (client, io, state) => {
         if (!state.currentServer?.initialized) {
             await client.say(Config.SPECTATOR_CHANNEL, 'Whoops, spectator is not on a server');
@@ -57,7 +57,7 @@ export const server: CommandHandler = {
 
 export const join: CommandHandler = {
     command: 'join',
-    permittedRoles: [Role.Viewer, Role.Subscriber, Role.VIP, Role.Moderator],
+    permittedRoles: [Role.Viewer],
     execute: async (client, io, state) => {
         if (!state.currentServer?.initialized) {
             await client.say(Config.SPECTATOR_CHANNEL, 'Whoops, spectator is not on a server');
@@ -73,7 +73,7 @@ export const join: CommandHandler = {
 
 export const players: CommandHandler = {
     command: 'players',
-    permittedRoles: [Role.Viewer, Role.Subscriber, Role.VIP, Role.Moderator],
+    permittedRoles: [Role.Viewer],
     execute: async (client, io, state) => {
         if (!state.currentServer?.initialized) {
             await client.say(Config.SPECTATOR_CHANNEL, 'Spectator is not on a server, player summary is not available');
@@ -93,7 +93,7 @@ export const players: CommandHandler = {
 
 export const top: CommandHandler = {
     command: 'top',
-    permittedRoles: [Role.Viewer, Role.Subscriber, Role.VIP, Role.Moderator],
+    permittedRoles: [Role.Viewer],
     execute: async (client, io, state, args) => {
         if (!state.currentServer?.initialized) {
             await client.say(Config.SPECTATOR_CHANNEL, 'Spectator is not on a server, top players are not available');
@@ -119,7 +119,7 @@ export const top: CommandHandler = {
 export const map: CommandHandler = {
     command: 'map',
     aliases: ['currentmap'],
-    permittedRoles: [Role.Viewer, Role.Subscriber, Role.VIP, Role.Moderator],
+    permittedRoles: [Role.Viewer],
     execute: async (client, io, state) => {
         if (!state.currentServer?.initialized) {
             await client.say(Config.SPECTATOR_CHANNEL, 'Whoops, spectator is not on a server');

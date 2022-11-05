@@ -12,30 +12,33 @@ export enum Role {
 }
 
 export function authorize(tags: tmi.Userstate, permittedRoles: Role[], command: string): boolean {
-    const role = getRole(tags);
+    const roles = getRoles(tags);
 
-    // Broadcaster is allowed to issue any command
-    if (permittedRoles.includes(role) || role == Role.Broadcaster) {
-        authLogger.debug(role, tags.username, 'is authorized to execute', command);
-        return true;
+    for (const role of roles) {
+        // Broadcaster is allowed to issue any command
+        if (permittedRoles.includes(role) || role == Role.Broadcaster) {
+            authLogger.debug(roles, tags.username, 'is authorized to execute', command);
+            return true;
+        }
     }
 
-    authLogger.warn(role, tags.username, 'is not authorized to execute', command);
+    authLogger.warn(...roles, tags.username, 'is not authorized to execute', command);
     return false;
 }
 
-function getRole(tags: tmi.Userstate): Role {
+function getRoles(tags: tmi.Userstate): Role[] {
+    const roles = [Role.Viewer];
     if (tags.badges?.broadcaster) {
-        return Role.Broadcaster;
+        roles.push(Role.Broadcaster);
     }
     if (tags.mod) {
-        return Role.Moderator;
+        roles.push(Role.Moderator);
     }
     if (tags.badges?.vip) {
-        return Role.VIP;
+        roles.push(Role.VIP);
     }
     if (tags.subscriber) {
-        return Role.Subscriber;
+        roles.push(Role.Subscriber);
     }
-    return Role.Viewer;
+    return roles;
 }

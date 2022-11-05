@@ -17,7 +17,7 @@ export async function forwardSpectatorCommand(client: tmi.Client, io: socketio.S
 export const next: CommandHandler = {
     command: 'next',
     aliases: ['skip'],
-    permittedRoles: [Role.Viewer, Role.Subscriber, Role.VIP, Role.Moderator],
+    permittedRoles: [Role.Viewer],
     execute: (client, io) => {
         return forwardSpectatorCommand(client, io, 'next_player');
     }
@@ -42,7 +42,7 @@ export const restart: CommandHandler = {
 export const resume: CommandHandler = {
     command: 'resume',
     aliases: ['unpause'],
-    permittedRoles: [Role.Viewer, Role.Subscriber, Role.VIP, Role.Moderator],
+    permittedRoles: [Role.Viewer],
     execute: (client, io) => {
         return forwardSpectatorCommand(client, io, 'rotation_resume');
     }
@@ -51,7 +51,7 @@ export const resume: CommandHandler = {
 export const stay: CommandHandler = {
     command: 'stay',
     aliases: ['pause'],
-    permittedRoles: [Role.Viewer, Role.Subscriber, Role.VIP, Role.Moderator],
+    permittedRoles: [Role.Viewer],
     execute: (client, io) => {
         return forwardSpectatorCommand(client, io, 'rotation_pause');
     }
