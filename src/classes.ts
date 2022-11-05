@@ -54,6 +54,10 @@ export class GameServer {
     getActivePlayers(): Array<Player> | undefined {
         return this.getHumanPlayers()?.filter(player => player.score !== 0 || player.kills !== 0 || player.deaths !== 0);
     }
+
+    getPlayer(name: string): Player | undefined {
+        return this.players?.find((p: Player) => p.name == name);
+    }
 }
 
 interface IPlayer {

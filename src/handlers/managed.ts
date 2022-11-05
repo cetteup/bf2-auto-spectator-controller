@@ -3,7 +3,7 @@ import { Role } from '../permissions';
 import * as net from 'net';
 import Config from '../config';
 import { isValidPort } from '../utils';
-import { GameServer, Player } from '../classes';
+import { GameServer } from '../classes';
 import { ServerDTO } from '../typing';
 import { handlerLogger } from './common';
 
@@ -20,7 +20,7 @@ export const joinserver: CommandHandler = {
         }
 
         const server = new GameServer(ip, Number(port), password, false);
-        const onCurrentServer = state.currentServer?.players?.some((p: Player) => p.name == Config.SPECTATOR_NAME);
+        const onCurrentServer = !!state.currentServer?.getPlayer(Config.SPECTATOR_NAME);
 
         // Update join server if given ip, port or password differs from current server or spectator is not actually on the server
         let response;
@@ -126,5 +126,19 @@ export const map: CommandHandler = {
             return;
         }
         await client.say(Config.SPECTATOR_CHANNEL, `The current map is: ${state.currentServer.mapName} (${state.currentServer.mapSize})`);
+    }
+};
+
+export const team: CommandHandler = {
+    command: 'team',
+    aliases: ['currentteam'],
+    permittedRoles: [Role.Viewer],
+    execute: async (client, io, state) => {
+        const team = state.currentServer?.getPlayer(Config.SPECTATOR_NAME)?.teamLabel;
+        if (!team) {
+            await client.say(Config.SPECTATOR_CHANNEL, 'Whoops, spectator is not on a server');
+            return;
+        }
+        await client.say(Config.SPECTATOR_CHANNEL, `Currently spectating the ${team} team`);
     }
 };

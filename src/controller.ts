@@ -7,7 +7,7 @@ import { CommandHandler } from './handlers/typing';
 import { authorize } from './permissions';
 import { ControllerState, ServerDTO, TwitchTokenResponse } from './typing';
 import { next, respawn, restart, resume, stay } from './handlers/forwarded';
-import { join, joinserver, map, players, server, top } from './handlers/managed';
+import { join, joinserver, map, players, server, team, top } from './handlers/managed';
 import { GameServer } from './classes';
 import { Logger } from 'tslog';
 import * as cron from 'node-cron';
@@ -57,7 +57,7 @@ class Controller {
 
         this.handlers = [
             next, respawn, restart, resume, stay,
-            joinserver, server, join, players, top, map
+            joinserver, server, join, players, top, map, team
         ];
 
         this.state = {};
