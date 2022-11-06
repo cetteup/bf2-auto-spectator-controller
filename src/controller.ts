@@ -46,7 +46,7 @@ class Controller {
             connection: { reconnect: true },
             identity: {
                 username: Config.CHATBOT_USERNAME,
-                password: this.getClientPassword
+                password: () => this.getClientPassword()
             },
             channels: [Config.SPECTATOR_CHANNEL],
             options: {
