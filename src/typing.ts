@@ -1,4 +1,5 @@
 import { GameServer } from './classes';
+import { Role } from './permissions';
 
 export type SpectatorCommand = 'game_restart' | 'rotation_pause' | 'rotation_resume' | 'next_player' | 'respawn'
 
@@ -24,4 +25,12 @@ export type TwitchTokenResponse = {
     refresh_token: string
     scope: string[]
     token_type: string
+}
+
+export type CustomCommand = {
+    identifier: string
+    aliases?: string[]
+    permittedRoles: Role[]
+    response: string
+    description?: string
 }

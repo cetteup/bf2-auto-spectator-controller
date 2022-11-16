@@ -1,5 +1,49 @@
 import axios from 'axios';
 import Config from './config';
+import { CustomCommand } from './typing';
+import path from 'path';
+import { Schema, ValidationError, Validator } from 'jsonschema';
+import fs from 'fs';
+import logger from './logger';
+import yaml from 'js-yaml';
+
+export function loadCustomCommands(): CustomCommand[] {
+    const configPath = path.join(Config.ROOT_DIR, 'custom-commands.yaml');
+    if (!fs.existsSync(configPath)) {
+        return [];
+    }
+    
+    const schemaPath = path.join(Config.ROOT_DIR, 'custom-commands.schema.json');
+    let schema: Schema;
+    try {
+        const unparsed = fs.readFileSync(schemaPath, { encoding: 'utf8' });
+        schema = JSON.parse(unparsed);
+    }
+    catch (e: any) {
+        logger.error('Failed to read/parse custom command schema', schemaPath, e.message);
+        return [];
+    }
+    
+    try {
+        const unparsed = fs.readFileSync(configPath, { encoding: 'utf8' });
+        const commands = yaml.load(unparsed) as CustomCommand[];
+
+        const validator = new Validator();
+        validator.validate(commands, schema, { throwAll: true });
+
+        return commands;
+    }
+    catch (e: any) {
+        if (Array.isArray(e.errors) && e.schema) {
+            // Log all validation errors if schema validation failed
+            logger.error('Given custom command config does not adhere to schema', e.errors.map((e: ValidationError) => `${e.property}: ${e.message}`));
+        }
+        else {
+            logger.error('Failed to read/parse custom command config file', e.message);
+        }
+        return [];
+    }
+}
 
 export function isValidPort(port: number): boolean {
     return port > 0 && port < 65536;

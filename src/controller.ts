@@ -12,7 +12,7 @@ import { GameServer } from './classes';
 import { Logger } from 'tslog';
 import * as cron from 'node-cron';
 import axios from 'axios';
-import { formatOAuthPassword, isAccessTokenValid } from './utils';
+import { formatOAuthPassword, isAccessTokenValid, loadCustomCommands } from './utils';
 
 class Controller {
     private logger: Logger;
@@ -168,9 +168,24 @@ class Controller {
             });
         });
     }
+    
+    public addCustomCommandHandlers(): void {
+        const customCommands = loadCustomCommands();
+        for (const command of customCommands) {
+            this.handlers.push({
+                identifier: command.identifier,
+                aliases: command.aliases,
+                permittedRoles: command.permittedRoles,
+                execute: async (client) => {
+                    await client.say(Config.SPECTATOR_CHANNEL, command.response);
+                }
+            });
+        }
+    }
 
     public async run(): Promise<void> {
         this.setupEventListeners();
+        this.addCustomCommandHandlers();
         await this.client.connect();
         this.serverStateUpdateTask.start();
         this.server.listen(Config.LISTEN_PORT, '0.0.0.0', () => {

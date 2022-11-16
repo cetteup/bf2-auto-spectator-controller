@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "type": "array",
+  "minItems": 1,
+  "uniqueItems": true,
+  "description": "List of custom commands",
+  "items": {
+    "type": "object",
+    "properties": {
+      "identifier": {
+        "type": "string",
+        "description": "Name of the command, without ! prefix",
+        "examples": ["discord"]
+      },
+      "aliases": {
+        "type": "array",
+        "description": "Aliases for the command",
+        "items": {
+          "type": "string",
+          "uniqueItems": true
+        }
+      },
+      "permittedRoles": {
+        "type": "array",
+        "description": "Roles permitted to execute the command",
+        "items": {
+          "type": "string",
+          "minItems": 1,
+          "uniqueItems": true,
+          "enum": ["viewer", "subscriber", "vip", "moderator", "broadcaster"]
+        }
+      },
+      "response": {
+        "type": "string",
+        "description": "Response for the command",
+        "examples": ["https://discord.gg/tzNDq7xMTK"]
+      },
+      "description": {
+        "type": "string",
+        "description": "Description to show on the command help page instead of the response",
+        "examples": ["Show a link to the Discord server"]
+      }
+    },
+    "required": ["identifier", "response", "permittedRoles"]
+  }
+}

@@ -105,3 +105,6 @@ dist
 
 .vscode/
 .idea/
+
+# Custom command config
+custom-commands.yaml
