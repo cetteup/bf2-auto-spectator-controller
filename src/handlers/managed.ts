@@ -8,7 +8,7 @@ import { ServerDTO } from '../typing';
 import { handlerLogger } from './common';
 
 export const joinserver: CommandHandler = {
-    command: 'joinserver',
+    identifier: 'joinserver',
     aliases: ['switchserver'],
     permittedRoles: [Role.Moderator],
     execute: async (client, io, state, args) => {
@@ -43,7 +43,7 @@ export const joinserver: CommandHandler = {
 };
 
 export const server: CommandHandler = {
-    command: 'server',
+    identifier: 'server',
     aliases: ['currentserver'],
     permittedRoles: [Role.Viewer],
     execute: async (client, io, state) => {
@@ -56,7 +56,7 @@ export const server: CommandHandler = {
 };
 
 export const join: CommandHandler = {
-    command: 'join',
+    identifier: 'join',
     permittedRoles: [Role.Viewer],
     execute: async (client, io, state) => {
         if (!state.currentServer?.initialized) {
@@ -72,7 +72,7 @@ export const join: CommandHandler = {
 };
 
 export const players: CommandHandler = {
-    command: 'players',
+    identifier: 'players',
     permittedRoles: [Role.Viewer],
     execute: async (client, io, state) => {
         if (!state.currentServer?.initialized) {
@@ -92,7 +92,7 @@ export const players: CommandHandler = {
 };
 
 export const top: CommandHandler = {
-    command: 'top',
+    identifier: 'top',
     permittedRoles: [Role.Viewer],
     execute: async (client, io, state, args) => {
         if (!state.currentServer?.initialized) {
@@ -117,7 +117,7 @@ export const top: CommandHandler = {
 };
 
 export const map: CommandHandler = {
-    command: 'map',
+    identifier: 'map',
     aliases: ['currentmap'],
     permittedRoles: [Role.Viewer],
     execute: async (client, io, state) => {
@@ -130,7 +130,7 @@ export const map: CommandHandler = {
 };
 
 export const team: CommandHandler = {
-    command: 'team',
+    identifier: 'team',
     aliases: ['currentteam'],
     permittedRoles: [Role.Viewer],
     execute: async (client, io, state) => {

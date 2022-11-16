@@ -109,14 +109,14 @@ class Controller {
         return formatOAuthPassword(this.oauthTokens.access);
     }
 
-    private async handleCommand(tags: tmi.Userstate, command: string, args: string[]): Promise<void> {
-        const handler = this.handlers.find((h) => h.command == command || h.aliases?.includes(command));
+    private async handleCommand(tags: tmi.Userstate, identifier: string, args: string[]): Promise<void> {
+        const handler = this.handlers.find((h) => h.identifier == identifier || h.aliases?.includes(identifier));
 
-        if (!handler || Config.DISABLED_COMMANDS.includes(handler.command)) return;
+        if (!handler || Config.DISABLED_COMMANDS.includes(handler.identifier)) return;
 
-        this.logger.info(tags.username, 'issued command', command, ...args);
+        this.logger.info(tags.username, 'issued command', identifier, ...args);
 
-        if (!authorize(tags, handler.permittedRoles, command)) return;
+        if (!authorize(tags, handler.permittedRoles, identifier)) return;
 
         return handler.execute(this.client, this.io, this.state, args);
     }

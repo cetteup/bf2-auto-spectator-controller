@@ -15,7 +15,7 @@ export async function forwardSpectatorCommand(client: tmi.Client, io: socketio.S
 }
 
 export const next: CommandHandler = {
-    command: 'next',
+    identifier: 'next',
     aliases: ['skip'],
     permittedRoles: [Role.Viewer],
     execute: (client, io) => {
@@ -24,7 +24,7 @@ export const next: CommandHandler = {
 };
 
 export const respawn: CommandHandler = {
-    command: 'respawn',
+    identifier: 'respawn',
     permittedRoles: [Role.VIP, Role.Moderator],
     execute: (client, io) => {
         return forwardSpectatorCommand(client, io, 'respawn');
@@ -32,7 +32,7 @@ export const respawn: CommandHandler = {
 };
 
 export const restart: CommandHandler = {
-    command: 'restart',
+    identifier: 'restart',
     permittedRoles: [Role.VIP, Role.Moderator],
     execute: (client, io) => {
         return forwardSpectatorCommand(client, io, 'game_restart');
@@ -40,7 +40,7 @@ export const restart: CommandHandler = {
 };
 
 export const resume: CommandHandler = {
-    command: 'resume',
+    identifier: 'resume',
     aliases: ['unpause'],
     permittedRoles: [Role.Viewer],
     execute: (client, io) => {
@@ -49,7 +49,7 @@ export const resume: CommandHandler = {
 };
 
 export const stay: CommandHandler = {
-    command: 'stay',
+    identifier: 'stay',
     aliases: ['pause'],
     permittedRoles: [Role.Viewer],
     execute: (client, io) => {
