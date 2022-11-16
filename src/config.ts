@@ -12,4 +12,5 @@ export default abstract class Config {
     static readonly CHATBOT_OAUTH_REFRESH_TOKEN?: string = process.env.CHATBOT_OAUTH_REFRESH_TOKEN;
     static readonly SPECTATOR_NAME: string = process.env.SPECTATOR_NAME || 'twitch.tv/BF2tv';
     static readonly DISABLED_COMMANDS: string[] = process.env.DISABLED_COMMANDS?.split(' ') || [];
+    static readonly REQUEST_TIMEOUT: number = Number(process.env.REQUEST_TIMEOUT) || 4000;
 }
