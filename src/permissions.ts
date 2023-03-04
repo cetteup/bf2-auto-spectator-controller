@@ -11,7 +11,7 @@ export enum Role {
     Broadcaster = 'broadcaster'
 }
 
-export function authorize(tags: tmi.Userstate, permittedRoles: Role[], command: string): boolean {
+export function authorize(tags: tmi.ChatUserstate, permittedRoles: Role[], command: string): boolean {
     const roles = getRoles(tags);
 
     for (const role of roles) {
@@ -26,7 +26,7 @@ export function authorize(tags: tmi.Userstate, permittedRoles: Role[], command: 
     return false;
 }
 
-function getRoles(tags: tmi.Userstate): Role[] {
+function getRoles(tags: tmi.ChatUserstate): Role[] {
     const roles = [Role.Viewer];
     if (tags.badges?.broadcaster) {
         roles.push(Role.Broadcaster);

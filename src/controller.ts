@@ -111,7 +111,7 @@ class Controller {
         return formatOAuthPassword(this.oauthTokens.access);
     }
 
-    private async handleCommand(tags: tmi.Userstate, identifier: string, args: string[]): Promise<void> {
+    private async handleCommand(tags: tmi.ChatUserstate, identifier: string, args: string[]): Promise<void> {
         const handler = this.handlers.find((h) => h.identifier == identifier || h.aliases?.includes(identifier));
 
         if (!handler || Config.DISABLED_COMMANDS.includes(handler.identifier)) return;
@@ -124,7 +124,7 @@ class Controller {
     }
 
     private setupEventListeners(): void {
-        this.client.on('message', async (channel: string, tags: tmi.Userstate, message: string, self: boolean) => {
+        this.client.on('message', async (channel: string, tags: tmi.ChatUserstate, message: string, self: boolean) => {
             if (self || !message.startsWith('!')) return;
 
             const args = message.slice(1).split(' ');
