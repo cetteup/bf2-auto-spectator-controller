@@ -14,6 +14,22 @@ export async function forwardSpectatorCommand(client: tmi.Client, io: socketio.S
     await client.say(Config.SPECTATOR_CHANNEL, Constants.COMMAND_RESPONSES[command]);
 }
 
+export const start: CommandHandler = {
+    identifier: 'start',
+    permittedRoles: [Role.Moderator],
+    execute: (client, io) => {
+        return forwardSpectatorCommand(client, io, 'start');
+    }
+};
+
+export const stop: CommandHandler = {
+    identifier: 'stop',
+    permittedRoles: [Role.Moderator],
+    execute: (client, io) => {
+        return forwardSpectatorCommand(client, io, 'stop');
+    }
+};
+
 export const next: CommandHandler = {
     identifier: 'next',
     aliases: ['skip'],

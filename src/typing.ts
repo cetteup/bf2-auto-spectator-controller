@@ -1,7 +1,7 @@
 import { GameServer } from './classes';
 import { Role } from './permissions';
 
-export type SpectatorCommand = 'game_restart' | 'rotation_pause' | 'rotation_resume' | 'next_player' | 'respawn'
+export type SpectatorCommand = 'start' | 'stop' | 'game_restart' | 'rotation_pause' | 'rotation_resume' | 'next_player' | 'respawn'
 
 export type ForwardCommandDTO = {
     key: SpectatorCommand
