@@ -32,7 +32,7 @@ export const stop: CommandHandler = {
 
 export const next: CommandHandler = {
     identifier: 'next',
-    aliases: ['skip'],
+    aliases: ['n', 'skip'],
     permittedRoles: [Role.Viewer],
     execute: (client, io) => {
         return forwardSpectatorCommand(client, io, 'next_player');
@@ -57,7 +57,7 @@ export const restart: CommandHandler = {
 
 export const resume: CommandHandler = {
     identifier: 'resume',
-    aliases: ['unpause'],
+    aliases: ['r', 'unpause'],
     permittedRoles: [Role.Viewer],
     execute: (client, io) => {
         return forwardSpectatorCommand(client, io, 'rotation_resume');
@@ -66,7 +66,7 @@ export const resume: CommandHandler = {
 
 export const stay: CommandHandler = {
     identifier: 'stay',
-    aliases: ['pause'],
+    aliases: ['s', 'pause'],
     permittedRoles: [Role.Viewer],
     execute: (client, io) => {
         return forwardSpectatorCommand(client, io, 'rotation_pause');
