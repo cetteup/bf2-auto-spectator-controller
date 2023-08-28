@@ -17,6 +17,7 @@ import { formatOAuthPassword, isAccessTokenValid, loadCustomCommands } from './u
 
 class Controller {
     private logger: Logger;
+    private chatLogger: Logger;
 
     private oauthTokens: {
         access: string
@@ -35,6 +36,7 @@ class Controller {
 
     constructor() {
         this.logger = logger.getChildLogger({ name: 'ControllerLogger' });
+        this.chatLogger = logger.getChildLogger({ name: 'ChatLogger' });
 
         this.oauthTokens = {
             access: Config.CHATBOT_OAUTH_ACCESS_TOKEN,
@@ -125,7 +127,13 @@ class Controller {
 
     private setupEventListeners(): void {
         this.client.on('message', async (channel: string, tags: tmi.ChatUserstate, message: string, self: boolean) => {
-            if (self || !message.startsWith('!')) return;
+            if (self) return;
+
+            if (Config.LOG_CHAT) {
+                this.logChatMessage(tags.username, message);
+            }
+
+            if (!message.startsWith('!')) return;
 
             const args = message.slice(1).split(' ');
             const command = args.shift()?.toLowerCase();
@@ -183,6 +191,11 @@ class Controller {
                 }
             });
         }
+    }
+
+    public logChatMessage(username: string | undefined, message: string): void {
+        this.chatLogger.setSettings({ requestId: username });
+        this.chatLogger.info(message);
     }
 
     public async run(): Promise<void> {
