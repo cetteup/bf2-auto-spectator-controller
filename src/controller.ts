@@ -157,7 +157,7 @@ class Controller {
 
                 // Announce server switch if spectator is currently on a server
                 if (currentServer) {
-                    await this.client.say(Config.SPECTATOR_CHANNEL, `Switching servers, going to ${selected.name}`);
+                    await this.client.say(Config.SPECTATOR_CHANNEL, `Switching servers, joining ${selected.name} shortly`);
                 }
             }
         }
