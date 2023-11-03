@@ -19,7 +19,7 @@
   "devDependencies": {
     "@tsconfig/node18": "18.2.2",
     "@tsconfig/recommended": "1.0.3",
-    "@types/js-yaml": "4.0.5",
+    "@types/js-yaml": "4.0.8",
     "@types/luxon": "3.3.3",
     "@types/node-cron": "3.0.8",
     "@types/tmi.js": "1.8.5",
