@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "type": "array",
+  "minItems": 1,
+  "uniqueItems": true,
+  "description": "List of servers/server configs",
+  "items": {
+    "type": "object",
+    "properties": {
+      "ip": {
+        "type": "string",
+        "description": "IP address of the server",
+        "examples": ["95.172.92.116"]
+      },
+      "port": {
+        "type": "number",
+        "description": "(Game) Port of the server",
+        "examples": ["16567"]
+      },
+      "password": {
+        "type": "string",
+        "description": "Password of the server"
+      },
+      "rotationConfig": {
+        "type": "object",
+        "properties": {
+          "weight": {
+            "type": "number",
+            "description": "Weight to apply to the server",
+            "examples": ["1.0"]
+          },
+          "minPlayers": {
+            "type": "number",
+            "description": "Minimum number of players on the server required to join",
+            "examples": ["16"]
+          },
+          "fallback": {
+            "type": "boolean",
+            "description": "Whether to use this server as a fallback"
+          }
+        }
+      }
+    },
+    "required": ["ip", "port"]
+  }
+}

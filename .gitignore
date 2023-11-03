@@ -108,3 +108,6 @@ dist
 
 # Custom command config
 custom-commands.yaml
+
+# Server config
+servers.yaml
