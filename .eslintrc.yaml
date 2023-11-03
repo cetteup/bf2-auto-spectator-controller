@@ -31,3 +31,5 @@ rules:
     - error
     - always
     - objectsInObjects: false
+  '@typescript-eslint/no-explicit-any':
+     - warn
