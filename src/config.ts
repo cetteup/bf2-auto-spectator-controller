@@ -1,4 +1,5 @@
 import * as path from 'path';
+import { Duration } from 'luxon';
 
 export default abstract class Config {
     static readonly ROOT_DIR: string = path.join(__dirname, '..');
@@ -14,4 +15,5 @@ export default abstract class Config {
     static readonly DISABLED_COMMANDS: string[] = process.env.DISABLED_COMMANDS?.split(' ') || [];
     static readonly REQUEST_TIMEOUT: number = Number(process.env.REQUEST_TIMEOUT) || 4000;
     static readonly LOG_CHAT: boolean = !!Number(process.env.LOG_CHAT);
+    static readonly MINIMUM_TIME_ON_SERVER: Duration = Duration.fromObject({ minutes: Number(process.env.MINIMUM_TIME_ON_SERVER) || 15 });
 }

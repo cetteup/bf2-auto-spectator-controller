@@ -1,32 +1,31 @@
 import axios from 'axios';
 import Config from './config';
-import { CustomCommand } from './typing';
 import path from 'path';
 import { Schema, ValidationError, Validator } from 'jsonschema';
 import fs from 'fs';
 import logger from './logger';
 import yaml from 'js-yaml';
 
-export function loadCustomCommands(): CustomCommand[] {
-    const configPath = path.join(Config.ROOT_DIR, 'custom-commands.yaml');
+export function loadConfig<T>(configFileName: string, schemaFileName: string): T[] {
+    const configPath = path.join(Config.ROOT_DIR, configFileName);
     if (!fs.existsSync(configPath)) {
         return [];
     }
     
-    const schemaPath = path.join(Config.ROOT_DIR, 'custom-commands.schema.json');
+    const schemaPath = path.join(Config.ROOT_DIR, schemaFileName);
     let schema: Schema;
     try {
         const unparsed = fs.readFileSync(schemaPath, { encoding: 'utf8' });
         schema = JSON.parse(unparsed);
     }
     catch (e: any) {
-        logger.error('Failed to read/parse custom command schema', schemaPath, e.message);
+        logger.error('Failed to read/parse schema', schemaPath, e.message);
         return [];
     }
     
     try {
         const unparsed = fs.readFileSync(configPath, { encoding: 'utf8' });
-        const commands = yaml.load(unparsed) as CustomCommand[];
+        const commands = yaml.load(unparsed) as T[];
 
         const validator = new Validator();
         validator.validate(commands, schema, { throwAll: true });
@@ -36,10 +35,10 @@ export function loadCustomCommands(): CustomCommand[] {
     catch (e: any) {
         if (Array.isArray(e.errors) && e.schema) {
             // Log all validation errors if schema validation failed
-            logger.error('Given custom command config does not adhere to schema', e.errors.map((e: ValidationError) => `${e.property}: ${e.message}`));
+            logger.error('Given config does not adhere to schema', configPath, schemaPath, e.errors.map((e: ValidationError) => `${e.property}: ${e.message}`));
         }
         else {
-            logger.error('Failed to read/parse custom command config file', e.message);
+            logger.error('Failed to read/parse config file', configPath, e.message);
         }
         return [];
     }

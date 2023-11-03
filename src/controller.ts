@@ -5,7 +5,7 @@ import Config from './config';
 import logger from './logger';
 import { CommandHandler } from './handlers/typing';
 import { authorize } from './permissions';
-import { ControllerState, ServerDTO, TwitchTokenResponse } from './typing';
+import { ControllerState, CustomCommand, ServerConfig, ServerDTO, TwitchTokenResponse } from './typing';
 import { next, rejoin, respawn, restart, resume, start, stay, stop } from './handlers/forwarded';
 import { join, joinserver, map, players, server, team, top } from './handlers/managed';
 import { active, stats, summary } from './handlers/stats';
@@ -13,7 +13,8 @@ import { GameServer } from './classes';
 import { Logger } from 'tslog';
 import * as cron from 'node-cron';
 import axios from 'axios';
-import { formatOAuthPassword, isAccessTokenValid, loadCustomCommands } from './utils';
+import { formatOAuthPassword, isAccessTokenValid, loadConfig } from './utils';
+import { DateTime } from 'luxon';
 
 class Controller {
     private logger: Logger;
@@ -33,6 +34,7 @@ class Controller {
     private readonly state: ControllerState;
 
     private serverStateUpdateTask: cron.ScheduledTask;
+    private serverRotationSelectionTask: cron.ScheduledTask;
 
     constructor() {
         this.logger = logger.getChildLogger({ name: 'ControllerLogger' });
@@ -64,15 +66,22 @@ class Controller {
             stats, summary, active
         ];
 
-        this.state = {};
+        const serverConfigs = loadConfig<ServerConfig>('servers.yaml', 'servers.schema.json');
+        this.state = {
+            rotationServers: serverConfigs.map((s) => new GameServer(s.ip, s.port, s.password, s.rotationConfig))
+        };
 
         // Update current server's state every 20 seconds
         // (bflist updates at 00, 20 and 40, so get fresh data at 10, 30 and 50)
-        this.serverStateUpdateTask = cron.schedule('10,30,50 * * * * *', () => {
-            if (this.state.currentServer) {
-                logger.debug('Updating game server state', this.state.currentServer.ip, this.state.currentServer.port);
-                this.state.currentServer.updateState();
-            }
+        this.serverStateUpdateTask = cron.schedule('10,30,50 * * * * *', async () => {
+            await this.handleServerStateUpdateTask();
+        }, {
+            scheduled: false
+        });
+
+        // Re-select a server from the rotation every 2 minutes
+        this.serverRotationSelectionTask = cron.schedule('*/2 * * * *', async () => {
+            await this.handleServerRotationSelectionTask();
         }, {
             scheduled: false
         });
@@ -125,6 +134,42 @@ class Controller {
         return handler.execute(this.client, this.io, this.state, args);
     }
 
+    private async handleServerStateUpdateTask(): Promise<void> {
+        const updates = this.state.rotationServers.map((s) => {
+            this.logger.debug('Updating game server state', s.ip, s.port);
+            return s.updateState();
+        });
+        await Promise.all(updates);
+    }
+
+    private async handleServerRotationSelectionTask(): Promise<void> {
+        const { currentServer, serverToJoin, rotationServers } = this.state;
+
+        // Only run selection if the spectator
+        // a) is not currently on a server or
+        // b) does not currently have a server to join and has stayed on the current server for at least the minimum duration
+        if (!currentServer || !serverToJoin && currentServer?.onServerSince && DateTime.now().diff(currentServer.onServerSince) >= Config.MINIMUM_TIME_ON_SERVER) {
+            const selected = this.selectRotationServer(rotationServers);
+            if (selected && !selected?.equals(currentServer) && !selected?.equals(serverToJoin)) {
+                this.logger.info('Selected new rotation server', selected?.ip, selected?.port);
+                this.state.serverToJoin = selected;
+                selected.join(this.io);
+
+                // Announce server switch if spectator is currently on a server
+                if (currentServer) {
+                    await this.client.say(Config.SPECTATOR_CHANNEL, `Switching servers, going to ${selected.name}`);
+                }
+            }
+        }
+        else if (!serverToJoin && currentServer.onServerSince) {
+            const switchPossibleAt = currentServer.onServerSince.plus(Config.MINIMUM_TIME_ON_SERVER);
+            this.logger.debug('Server switch not possible yet, skipping server selection until', switchPossibleAt.toUTC().toISO());
+        }
+        else if (serverToJoin) {
+            this.logger.debug('Server switch already queued, skipping server selection');
+        }
+    }
+
     private setupEventListeners(): void {
         this.client.on('message', async (channel: string, tags: tmi.ChatUserstate, message: string, self: boolean) => {
             if (self) return;
@@ -156,20 +201,36 @@ class Controller {
             // Send spectator (back to) server if possible
             const server = this.state.serverToJoin ?? this.state.currentServer;
             if (server) {
-                socket.emit('join', <ServerDTO>{
-                    ip: server.ip,
-                    port: server.port.toString(),
-                    password: server.password
-                });
+                server.join(this.io);
             }
 
             socket.on('current', ({ ip, port, password }: ServerDTO) => {
-                if (!this.state.currentServer || ip != this.state.currentServer.ip || Number(port) != this.state.currentServer.port || password != this.state.currentServer.password) {
-                    this.state.currentServer = new GameServer(ip, Number(port), password);
-                    this.state.currentServer.updateState();
+                let server = this.state.rotationServers.find((s) => {
+                    return s.ip == ip && s.port == Number(port) && s.password == password;
+                });
+
+                if (!server) {
+                    server = new GameServer(ip, Number(port), password, {
+                        temporary: true
+                    });
+
+                    if (this.state.rotationServers.length > 0) {
+                        // Server rotation is configured => log warning and send spectator back to expected server (if available)
+                        this.logger.warn('Received current server is not in rotation', ip, port);
+                        const expectedServer = this.state.serverToJoin ?? this.state.currentServer;
+                        if (expectedServer) {
+                            this.logger.warn('Re-issuing join command for expected server', expectedServer.ip, expectedServer.port);
+                            expectedServer.join(this.io);
+                        }
+                    }
+                }
+
+                if (!this.state.currentServer?.equals(server)) {
+                    server.onServerSince = DateTime.now();
+                    this.state.currentServer = server;
 
                     // Unset join server if it is now the current server
-                    if (this.state.currentServer.ip == this.state.serverToJoin?.ip && this.state.currentServer.port == this.state.serverToJoin?.port) {
+                    if (this.state.serverToJoin?.equals(this.state.currentServer)) {
                         this.state.serverToJoin = undefined;
                     }
 
@@ -180,7 +241,7 @@ class Controller {
     }
     
     public addCustomCommandHandlers(): void {
-        const customCommands = loadCustomCommands();
+        const customCommands = loadConfig<CustomCommand>('custom-commands.yaml', 'custom-commands.schema.json');
         for (const command of customCommands) {
             this.handlers.push({
                 identifier: command.identifier,
@@ -193,6 +254,25 @@ class Controller {
         }
     }
 
+    private selectRotationServer(options: GameServer[]): GameServer | undefined {
+        if (options.length == 0) {
+            this.logger.warn('No servers in rotation');
+            return;
+        }
+
+        if (options.length == 1) {
+            return options[0];
+        }
+
+        const candidates = options
+            .filter((s) => s.selectable())
+            .sort((a, b) => {
+                return a.score() - b.score();
+            });
+
+        return candidates.pop();
+    }
+
     public logChatMessage(username: string | undefined, message: string): void {
         this.chatLogger.setSettings({ requestId: username });
         this.chatLogger.info(message);
@@ -202,7 +282,17 @@ class Controller {
         this.setupEventListeners();
         this.addCustomCommandHandlers();
         await this.client.connect();
+
+        await this.handleServerStateUpdateTask();
         this.serverStateUpdateTask.start();
+
+        if (this.state.rotationServers.length > 0) {
+            await this.handleServerRotationSelectionTask();
+            this.serverRotationSelectionTask.start();
+        } else {
+            this.logger.info('No servers configured, disabling automatic server rotation');
+        }
+
         this.server.listen(Config.LISTEN_PORT, '0.0.0.0', () => {
             this.logger.info('Listening on port', Config.LISTEN_PORT);
         });

@@ -1,14 +1,17 @@
 import axios from 'axios';
 import Config from './config';
 import logger from './logger';
+import { RotationConfig, ServerDTO } from './typing';
+import { DateTime, Duration } from 'luxon';
+import * as socketio from 'socket.io';
 
 export class GameServer {
     ip: string;
     port: number;
     password: string | null;
-    inRotation: boolean;
+    rotationConfig: RotationConfig;
 
-    initialized = false;
+    stateLastUpdatedAt: DateTime | undefined;
     name: string | undefined;
     mapName: string | undefined;
     mapSize: number | undefined;
@@ -16,31 +19,34 @@ export class GameServer {
     joinLinkWeb: string | undefined;
     players: Array<Player> | undefined;
 
-    constructor(ip: string, port: number, password: string | null = null, inRotation = false) {
+    onServerSince: DateTime | undefined;
+
+    constructor(ip: string, port: number, password: string | null, rotationConfig: RotationConfig) {
         this.ip = ip;
         this.port = port;
         this.password = password;
-        this.inRotation = inRotation;
+        this.rotationConfig = rotationConfig;
     }
 
-    updateState(): void {
-        axios.get(`https://api.bflist.io/bf2/v1/servers/${this.ip}:${this.port}`)
-            .then((response) => {
-                const state = response.data;
-                this.name = state.name;
-                this.mapName = state.mapName;
-                this.mapSize = state.mapSize;
-                this.maxPlayers = state.maxPlayers;
-                this.joinLinkWeb = state.joinLinkWeb;
-                // Add players sorted by score (desc)
-                this.players = state.players.map((player: IPlayer) => new Player(player)).sort((a: Player, b: Player) => {
-                    return b.score - a.score;
-                });
-                // Mark server as initialized if this is the initial successful update
-                if (!this.initialized) this.initialized = true;
-            }).catch((error) => {
-                logger.error('Failed to update game server state', error.message, this.ip, this.port);
+    async updateState(): Promise<void> {
+        try {
+            const resp = await axios.get(`https://api.bflist.io/bf2/v1/servers/${this.ip}:${this.port}`);
+            const state = resp.data;
+            this.name = state.name;
+            this.mapName = state.mapName;
+            this.mapSize = state.mapSize;
+            this.maxPlayers = state.maxPlayers;
+            this.joinLinkWeb = state.joinLinkWeb;
+            // Add players sorted by score (desc)
+            this.players = state.players.map((player: IPlayer) => new Player(player)).sort((a: Player, b: Player) => {
+                return b.score - a.score;
             });
+
+            this.stateLastUpdatedAt = DateTime.now();
+        }
+        catch(e: any) {
+            logger.error('Failed to update game server state', e.message, this.ip, this.port);
+        }
     }
 
     getHumanPlayers(): Array<Player> | undefined {
@@ -57,6 +63,47 @@ export class GameServer {
 
     getPlayer(name: string): Player | undefined {
         return this.players?.find((p: Player) => p.name == name);
+    }
+
+    equals(other?: GameServer): boolean {
+        return this.ip == other?.ip && this.port == other.port && this.password == other.password;
+    }
+
+    selectable(): boolean {
+        // Fallback should *always* be selectable
+        if (this.rotationConfig.fallback) {
+            return true;
+        }
+
+        // Temporary servers should never be selectable as part of the normal rotation
+        if (this.rotationConfig.temporary) {
+            return false;
+        }
+
+        // Don't make server selectable if state has not recently updated
+        if (!this.stateLastUpdatedAt || DateTime.now().diff(this.stateLastUpdatedAt) > Duration.fromObject({ seconds: 30 })) {
+            return false;
+        }
+
+        const humanPlayers = this.getHumanPlayers()?.length ?? 0;
+        const minPlayers = this.rotationConfig.minPlayers ?? 0;
+        return humanPlayers >= minPlayers;
+    }
+
+    score(): number {
+        const humanPlayers = this.getHumanPlayers()?.length ?? 0;
+        const weight = this.rotationConfig.weight ?? 1.0;
+        return humanPlayers * weight;
+    }
+    
+    join(io: socketio.Server): void {
+        // Reset timestamp to ensure that we don't count time spent previously on a server when re-joining
+        this.onServerSince = undefined;
+        io.of('/server').emit('join', <ServerDTO>{
+            ip: this.ip,
+            port: this.port.toString(),
+            password: this.password
+        });
     }
 }
 

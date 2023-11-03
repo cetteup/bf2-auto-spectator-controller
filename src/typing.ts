@@ -11,10 +11,11 @@ export type ForwardCommandDTO = {
 export type ServerDTO = {
     ip: string
     port: string
-    password?: string
+    password: string | null
 }
 
 export type ControllerState = {
+    rotationServers: GameServer[]
     currentServer?: GameServer
     serverToJoin?: GameServer
 }
@@ -33,4 +34,18 @@ export type CustomCommand = {
     permittedRoles: Role[]
     response: string
     description?: string
+}
+
+export type ServerConfig = {
+    ip: string
+    port: number
+    password: string | null
+    rotationConfig: RotationConfig
+}
+
+export type RotationConfig = {
+    weight?: number
+    minPlayers?: number
+    fallback?: boolean
+    temporary?: boolean
 }

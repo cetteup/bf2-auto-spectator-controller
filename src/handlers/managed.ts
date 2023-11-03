@@ -4,7 +4,6 @@ import * as net from 'net';
 import Config from '../config';
 import { isValidPort } from '../utils';
 import { GameServer } from '../classes';
-import { ServerDTO } from '../typing';
 import { handlerLogger } from './common';
 
 export const joinserver: CommandHandler = {
@@ -19,22 +18,29 @@ export const joinserver: CommandHandler = {
             return;
         }
 
-        const server = new GameServer(ip, Number(port), password, false);
+        const serverToJoin = new GameServer(ip, Number(port), password, {
+            temporary: true
+        });
         const onCurrentServer = !!state.currentServer?.getPlayer(Config.SPECTATOR_NAME);
 
         // Update join server if given ip, port or password differs from current server or spectator is not actually on the server
         let response;
-        if (server.ip != state.currentServer?.ip || server.port != state.currentServer?.port || server.password != state.currentServer.password || !onCurrentServer) {
+        if (!serverToJoin.equals(state.currentServer) || !onCurrentServer) {
             response = 'Spectator will join server shortly';
-            state.serverToJoin = server;
 
-            handlerLogger.info('Join server updated', server.ip, server.port);
+            // Avoid adding multiple rotation entries for a single server => use server from list if possible
+            const rotationServer = state.rotationServers.find((s) => s.equals(serverToJoin));
+            if (rotationServer) {
+                state.serverToJoin = rotationServer;
+            }
+            else {
+                state.serverToJoin = serverToJoin;
+                state.rotationServers.push(serverToJoin);
+            }
 
-            io.of('/server').emit('join', <ServerDTO>{
-                ip: server.ip,
-                port: server.port.toString(),
-                password: server.password
-            });
+            handlerLogger.info('Join server updated', state.serverToJoin.ip, state.serverToJoin.port);
+
+            state.serverToJoin.join(io);
         } else {
             response = 'Spectator is already on requested server';
         }
@@ -47,7 +53,7 @@ export const server: CommandHandler = {
     aliases: ['currentserver'],
     permittedRoles: [Role.Viewer],
     execute: async (client, io, state) => {
-        if (!state.currentServer?.initialized) {
+        if (!state.currentServer?.onServerSince) {
             await client.say(Config.SPECTATOR_CHANNEL, 'Whoops, spectator is not on a server');
             return;
         }
@@ -59,7 +65,7 @@ export const join: CommandHandler = {
     identifier: 'join',
     permittedRoles: [Role.Viewer],
     execute: async (client, io, state) => {
-        if (!state.currentServer?.initialized) {
+        if (!state.currentServer?.onServerSince) {
             await client.say(Config.SPECTATOR_CHANNEL, 'Whoops, spectator is not on a server');
             return;
         }
@@ -75,7 +81,7 @@ export const players: CommandHandler = {
     identifier: 'players',
     permittedRoles: [Role.Viewer],
     execute: async (client, io, state) => {
-        if (!state.currentServer?.initialized) {
+        if (!state.currentServer?.onServerSince) {
             await client.say(Config.SPECTATOR_CHANNEL, 'Spectator is not on a server, player summary is not available');
             return;
         }
@@ -95,7 +101,7 @@ export const top: CommandHandler = {
     identifier: 'top',
     permittedRoles: [Role.Viewer],
     execute: async (client, io, state, args) => {
-        if (!state.currentServer?.initialized) {
+        if (!state.currentServer?.onServerSince) {
             await client.say(Config.SPECTATOR_CHANNEL, 'Spectator is not on a server, top players are not available');
             return;
         }
@@ -121,7 +127,7 @@ export const map: CommandHandler = {
     aliases: ['currentmap'],
     permittedRoles: [Role.Viewer],
     execute: async (client, io, state) => {
-        if (!state.currentServer?.initialized) {
+        if (!state.currentServer?.onServerSince) {
             await client.say(Config.SPECTATOR_CHANNEL, 'Whoops, spectator is not on a server');
             return;
         }
