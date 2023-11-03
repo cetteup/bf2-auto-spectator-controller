@@ -47,6 +47,14 @@ export const respawn: CommandHandler = {
     }
 };
 
+export const rejoin: CommandHandler = {
+    identifier: 'rejoin',
+    permittedRoles: [Role.VIP, Role.Moderator],
+    execute: (client, io) => {
+        return forwardSpectatorCommand(client, io, 'rejoin');
+    }
+};
+
 export const restart: CommandHandler = {
     identifier: 'restart',
     permittedRoles: [Role.VIP, Role.Moderator],
