@@ -41,6 +41,6 @@
         }
       }
     },
-    "required": ["ip", "port"]
+    "required": ["ip", "port", "rotationConfig"]
   }
 }
