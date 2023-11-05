@@ -265,16 +265,18 @@ class Controller {
         }
 
         const candidates = options
-            .filter((s) => s.selectable())
             .map((s) => {
                 const score = s.score();
-                this.logger.debug('Current score for rotation server', s.ip, s.port, 'is', score);
+                const selectable = s.selectable();
+                this.logger.debug('Current score for rotation server', s.ip, s.port, 'is', score, `(${selectable ? 'selectable' : 'not selectable'})`);
 
                 return {
                     server: s,
-                    score
+                    score,
+                    selectable
                 };
             })
+            .filter((c) => c.selectable)
             .sort((a, b) => {
                 return a.score - b.score;
             })

@@ -21,7 +21,7 @@ export class GameServer {
     players: Array<Player> | undefined;
 
     onServerSince: DateTime | undefined;
-    scores: Queue<number>;
+    private scores: Queue<number>;
 
     constructor(ip: string, port: number, password: string | null, rotationConfig: RotationConfig) {
         this.ip = ip;
