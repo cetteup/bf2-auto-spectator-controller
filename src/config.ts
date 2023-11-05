@@ -16,4 +16,5 @@ export default abstract class Config {
     static readonly REQUEST_TIMEOUT: number = Number(process.env.REQUEST_TIMEOUT) || 4000;
     static readonly LOG_CHAT: boolean = !!Number(process.env.LOG_CHAT);
     static readonly MINIMUM_TIME_ON_SERVER: Duration = Duration.fromObject({ minutes: Number(process.env.MINIMUM_TIME_ON_SERVER) || 15 });
+    static readonly ROTATION_SCORE_SAMPLE_SIZE = Number(process.env.ROTATION_SCORE_SAMPLE_SIZE) || 5;
 }

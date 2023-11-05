@@ -266,10 +266,15 @@ class Controller {
 
         const candidates = options
             .filter((s) => s.selectable())
-            .map((s) => ({
-                server: s,
-                score: s.score()
-            }))
+            .map((s) => {
+                const score = s.score();
+                this.logger.debug('Current score for rotation server', s.ip, s.port, 'is', score);
+
+                return {
+                    server: s,
+                    score
+                };
+            })
             .sort((a, b) => {
                 return a.score - b.score;
             })

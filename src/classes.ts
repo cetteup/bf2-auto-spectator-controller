@@ -4,6 +4,7 @@ import logger from './logger';
 import { RotationConfig, ServerDTO } from './typing';
 import { DateTime, Duration } from 'luxon';
 import * as socketio from 'socket.io';
+import Queue from './queue';
 
 export class GameServer {
     ip: string;
@@ -20,12 +21,15 @@ export class GameServer {
     players: Array<Player> | undefined;
 
     onServerSince: DateTime | undefined;
+    scores: Queue<number>;
 
     constructor(ip: string, port: number, password: string | null, rotationConfig: RotationConfig) {
         this.ip = ip;
         this.port = port;
         this.password = password;
         this.rotationConfig = rotationConfig;
+
+        this.scores = new Queue<number>(Config.ROTATION_SCORE_SAMPLE_SIZE);
     }
 
     async updateState(): Promise<void> {
@@ -93,7 +97,12 @@ export class GameServer {
     score(): number {
         const humanPlayers = this.getHumanPlayers()?.length ?? 0;
         const weight = this.rotationConfig.weight ?? 1.0;
-        return humanPlayers * weight;
+        const currentScore = humanPlayers * weight;
+
+        // Calculate score based on a rolling average of scores
+        // (avoids switching servers shortly after a server crashes or many players get kicked/leave after a round end/map change)
+        this.scores.push(currentScore);
+        return this.scores.getItems().reduce((acc, val) => acc +  val, 0) / this.scores.getSize();
     }
     
     join(io: socketio.Server): void {
