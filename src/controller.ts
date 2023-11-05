@@ -266,9 +266,14 @@ class Controller {
 
         const candidates = options
             .filter((s) => s.selectable())
+            .map((s) => ({
+                server: s,
+                score: s.score()
+            }))
             .sort((a, b) => {
-                return a.score() - b.score();
-            });
+                return a.score - b.score;
+            })
+            .map((c) => c.server);
 
         return candidates.pop();
     }
