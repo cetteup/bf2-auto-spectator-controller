@@ -104,6 +104,11 @@ export class GameServer {
             return false;
         }
 
+        // Don't make server selectable if rolling score average has not reached the desired sample size yet
+        if (!this.scores.isFull()) {
+            return false;
+        }
+
         const humanPlayers = this.getHumanPlayers()?.length ?? 0;
         const minPlayers = this.rotationConfig.minPlayers ?? 0;
         return humanPlayers >= minPlayers;
