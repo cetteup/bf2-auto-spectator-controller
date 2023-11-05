@@ -79,8 +79,8 @@ class Controller {
             scheduled: false
         });
 
-        // Re-select a server from the rotation every 2 minutes
-        this.serverRotationSelectionTask = cron.schedule('*/2 * * * *', async () => {
+        // Re-select a server from the rotation every 5 minutes
+        this.serverRotationSelectionTask = cron.schedule('*/5 * * * *', async () => {
             await this.handleServerRotationSelectionTask();
         }, {
             scheduled: false
