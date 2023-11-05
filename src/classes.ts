@@ -20,7 +20,7 @@ export class GameServer {
     joinLinkWeb: string | undefined;
     players: Array<Player> | undefined;
 
-    onServerSince: DateTime | undefined;
+    private onServerSince: DateTime | undefined;
     private scores: Queue<number>;
 
     constructor(ip: string, port: number, password: string | null, rotationConfig: RotationConfig) {
@@ -67,6 +67,21 @@ export class GameServer {
 
     getPlayer(name: string): Player | undefined {
         return this.players?.find((p: Player) => p.name == name);
+    }
+
+    startTimeOnServer(): void {
+        this.onServerSince = DateTime.now();
+    }
+
+    getTimeOnServer(): Duration | undefined {
+        if (!this.onServerSince) {
+            return;
+        }
+        return DateTime.now().diff(this.onServerSince);
+    }
+
+    hasSpectatorJoined(): boolean {
+        return this.getTimeOnServer() != undefined;
     }
 
     equals(other?: GameServer): boolean {

@@ -53,7 +53,7 @@ export const server: CommandHandler = {
     aliases: ['currentserver'],
     permittedRoles: [Role.Viewer],
     execute: async (client, io, state) => {
-        if (!state.currentServer?.onServerSince) {
+        if (!state.currentServer?.hasSpectatorJoined()) {
             await client.say(Config.SPECTATOR_CHANNEL, 'Whoops, spectator is not on a server');
             return;
         }
@@ -65,7 +65,7 @@ export const join: CommandHandler = {
     identifier: 'join',
     permittedRoles: [Role.Viewer],
     execute: async (client, io, state) => {
-        if (!state.currentServer?.onServerSince) {
+        if (!state.currentServer?.hasSpectatorJoined()) {
             await client.say(Config.SPECTATOR_CHANNEL, 'Whoops, spectator is not on a server');
             return;
         }
@@ -81,7 +81,7 @@ export const players: CommandHandler = {
     identifier: 'players',
     permittedRoles: [Role.Viewer],
     execute: async (client, io, state) => {
-        if (!state.currentServer?.onServerSince) {
+        if (!state.currentServer?.hasSpectatorJoined()) {
             await client.say(Config.SPECTATOR_CHANNEL, 'Spectator is not on a server, player summary is not available');
             return;
         }
@@ -101,7 +101,7 @@ export const top: CommandHandler = {
     identifier: 'top',
     permittedRoles: [Role.Viewer],
     execute: async (client, io, state, args) => {
-        if (!state.currentServer?.onServerSince) {
+        if (!state.currentServer?.hasSpectatorJoined()) {
             await client.say(Config.SPECTATOR_CHANNEL, 'Spectator is not on a server, top players are not available');
             return;
         }
@@ -127,7 +127,7 @@ export const map: CommandHandler = {
     aliases: ['currentmap'],
     permittedRoles: [Role.Viewer],
     execute: async (client, io, state) => {
-        if (!state.currentServer?.onServerSince) {
+        if (!state.currentServer?.hasSpectatorJoined()) {
             await client.say(Config.SPECTATOR_CHANNEL, 'Whoops, spectator is not on a server');
             return;
         }

@@ -148,7 +148,8 @@ class Controller {
         // Only run selection if the spectator
         // a) is not currently on a server or
         // b) does not currently have a server to join and has stayed on the current server for at least the minimum duration
-        if (!currentServer || !serverToJoin && currentServer?.onServerSince && DateTime.now().diff(currentServer.onServerSince) >= Config.MINIMUM_TIME_ON_SERVER) {
+        const timeOnServer = currentServer?.getTimeOnServer();
+        if (!currentServer || !serverToJoin && timeOnServer && timeOnServer >= Config.MINIMUM_TIME_ON_SERVER) {
             const selected = this.selectRotationServer(rotationServers);
             if (selected && !selected?.equals(currentServer) && !selected?.equals(serverToJoin)) {
                 this.logger.info('Selected new rotation server', selected?.ip, selected?.port);
@@ -161,8 +162,8 @@ class Controller {
                 }
             }
         }
-        else if (!serverToJoin && currentServer.onServerSince) {
-            const switchPossibleAt = currentServer.onServerSince.plus(Config.MINIMUM_TIME_ON_SERVER);
+        else if (!serverToJoin && timeOnServer) {
+            const switchPossibleAt = DateTime.now().plus(Config.MINIMUM_TIME_ON_SERVER.minus(timeOnServer));
             this.logger.debug('Server switch not possible yet, skipping server selection until', switchPossibleAt.toUTC().toISO());
         }
         else if (serverToJoin) {
@@ -226,7 +227,7 @@ class Controller {
                 }
 
                 if (!this.state.currentServer?.equals(server)) {
-                    server.onServerSince = DateTime.now();
+                    server.startTimeOnServer();
                     this.state.currentServer = server;
 
                     // Unset join server if it is now the current server
