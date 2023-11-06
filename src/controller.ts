@@ -265,6 +265,10 @@ class Controller {
             return options[0];
         }
 
+        if (!options.some((s) => s.rotationConfig.fallback)) {
+            this.logger.warn('No fallback server(s) configured, rotation server selection may not be possible in some cases');
+        }
+
         const candidates = options
             .map((s) => {
                 const score = s.score();
