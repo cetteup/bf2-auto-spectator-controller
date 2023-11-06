@@ -115,9 +115,10 @@ export class GameServer {
     }
 
     score(): number {
+        const humanPlayers = this.getHumanPlayers()?.length ?? 0;
         const activePlayers = this.getActivePlayers()?.length ?? 0;
         const weight = this.rotationConfig.weight ?? 1.0;
-        const currentScore = activePlayers * weight;
+        const currentScore = ((1 - Config.ACTIVE_PLAYER_SCORE_RATIO) * humanPlayers + Config.ACTIVE_PLAYER_SCORE_RATIO * activePlayers) * weight;
 
         // Calculate score based on a rolling average of scores
         // (avoids switching servers shortly after a server crashes or many players get kicked/leave after a round end/map change)
