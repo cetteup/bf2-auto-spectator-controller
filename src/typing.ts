@@ -43,9 +43,14 @@ export type ServerConfig = {
     rotationConfig: RotationConfig
 }
 
+export type RotationConditionSet = {
+    minPlayers?: number
+}
+
 export type RotationConfig = {
     weight?: number
     minPlayers?: number
     fallback?: boolean
     temporary?: boolean
+    conditions?: RotationConditionSet
 }

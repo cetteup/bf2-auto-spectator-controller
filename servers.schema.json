@@ -32,11 +32,23 @@
           "minPlayers": {
             "type": "number",
             "description": "Minimum number of players on the server required to join",
-            "examples": ["16"]
+            "examples": ["16"],
+            "deprecationMessage": "rotationConfig.minPlayers is deprecated and will be removed in a future release. Use rotationConfig.conditions.minPlayers instead."
           },
           "fallback": {
             "type": "boolean",
             "description": "Whether to use this server as a fallback"
+          },
+          "conditions": {
+            "type": "object",
+            "description": "Conditions for making the selectable",
+            "properties": {
+              "minPlayers": {
+                "type": "number",
+                "description": "Minimum number of players on the server",
+                "examples": ["16"]
+              }
+            }
           }
         }
       }

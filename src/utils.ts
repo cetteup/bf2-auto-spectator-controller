@@ -25,12 +25,12 @@ export function loadConfig<T>(configFileName: string, schemaFileName: string): T
     
     try {
         const unparsed = fs.readFileSync(configPath, { encoding: 'utf8' });
-        const commands = yaml.load(unparsed) as T[];
+        const config = yaml.load(unparsed) as T[];
 
         const validator = new Validator();
-        validator.validate(commands, schema, { throwAll: true });
+        validator.validate(config, schema, { throwAll: true });
 
-        return commands;
+        return config;
     }
     catch (e: any) {
         if (Array.isArray(e.errors) && e.schema) {

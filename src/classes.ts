@@ -1,7 +1,7 @@
 import axios from 'axios';
 import Config from './config';
 import logger from './logger';
-import { RotationConfig, ServerDTO } from './typing';
+import { RotationConditionSet, RotationConfig, ServerDTO } from './typing';
 import { DateTime, Duration } from 'luxon';
 import * as socketio from 'socket.io';
 import Queue from './queue';
@@ -89,6 +89,15 @@ export class GameServer {
     }
 
     selectable(): boolean {
+        // Copy legacy minPlayers condition from config to conditions
+        if (this.rotationConfig.minPlayers) {
+            logger.warn('rotationConfig.minPlayers is deprecated and will be removed in a future release, use rotationConfig.conditions.minPlayers instead', this.ip, this.port);
+            this.rotationConfig.conditions = {
+                minPlayers: this.rotationConfig.minPlayers,
+                ...this.rotationConfig.conditions
+            };
+        }
+
         // Fallback should *always* be selectable
         if (this.rotationConfig.fallback) {
             return true;
@@ -109,9 +118,21 @@ export class GameServer {
             return false;
         }
 
+        return this.matchesConditions(this.rotationConfig.conditions);
+    }
+
+    private matchesConditions(conditions: RotationConditionSet | undefined): boolean {
+        if (!conditions) {
+            return true;
+        }
+
         const humanPlayers = this.getHumanPlayers()?.length ?? 0;
-        const minPlayers = this.rotationConfig.minPlayers ?? 0;
-        return humanPlayers >= minPlayers;
+        const minPlayers = conditions.minPlayers ?? 0;
+        if (humanPlayers < minPlayers) {
+            return false;
+        }
+
+        return true;
     }
 
     score(): number {
