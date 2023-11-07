@@ -47,6 +47,30 @@
                 "type": "number",
                 "description": "Minimum number of players on the server",
                 "examples": ["16"]
+              },
+              "mapNames": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "description": "Allowed map names of the server",
+                "items": {
+                  "type": "string",
+                  "examples": ["Strike At Karkand"]
+                }
+              },
+              "gameTypes": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "description": "Allowed game types of the server",
+                "items": {
+                  "type": "string",
+                  "examples": ["gpm_cq"]
+                }
+              },
+              "noVehicles": {
+                "type": "boolean",
+                "description": "Allowed value of noVehicles setting of server"
               }
             }
           }

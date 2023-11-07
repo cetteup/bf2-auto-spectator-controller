@@ -45,6 +45,9 @@ export type ServerConfig = {
 
 export type RotationConditionSet = {
     minPlayers?: number
+    mapNames?: string[]
+    gameTypes?: string[]
+    noVehicles?: boolean
 }
 
 export type RotationConfig = {

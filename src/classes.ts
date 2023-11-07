@@ -14,9 +14,11 @@ export class GameServer {
 
     stateLastUpdatedAt: DateTime | undefined;
     name: string | undefined;
+    maxPlayers: number | undefined;
     mapName: string | undefined;
     mapSize: number | undefined;
-    maxPlayers: number | undefined;
+    gameType: string | undefined;
+    noVehicles: boolean | undefined;
     joinLinkWeb: string | undefined;
     players: Array<Player> | undefined;
 
@@ -37,9 +39,11 @@ export class GameServer {
             const resp = await axios.get(`https://api.bflist.io/bf2/v1/servers/${this.ip}:${this.port}`);
             const state = resp.data;
             this.name = state.name;
+            this.maxPlayers = state.maxPlayers;
             this.mapName = state.mapName;
             this.mapSize = state.mapSize;
-            this.maxPlayers = state.maxPlayers;
+            this.gameType = state.gameType;
+            this.noVehicles = state.noVehicles;
             this.joinLinkWeb = state.joinLinkWeb;
             // Add players sorted by score (desc)
             this.players = state.players.map((player: IPlayer) => new Player(player)).sort((a: Player, b: Player) => {
@@ -129,6 +133,18 @@ export class GameServer {
         const humanPlayers = this.getHumanPlayers()?.length ?? 0;
         const minPlayers = conditions.minPlayers ?? 0;
         if (humanPlayers < minPlayers) {
+            return false;
+        }
+
+        if (conditions.mapNames && this.mapName && !conditions.mapNames.includes(this.mapName)) {
+            return false;
+        }
+
+        if (conditions.gameTypes && this.gameType && !conditions.gameTypes.includes(this.gameType)) {
+            return false;
+        }
+
+        if (conditions.noVehicles && this.noVehicles != conditions.noVehicles) {
             return false;
         }
 
