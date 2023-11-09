@@ -17,12 +17,12 @@ export function authorize(tags: tmi.ChatUserstate, permittedRoles: Role[], comma
     for (const role of roles) {
         // Broadcaster is allowed to issue any command
         if (permittedRoles.includes(role) || role == Role.Broadcaster) {
-            authLogger.debug(roles, tags.username, 'is authorized to execute', command);
+            authLogger.debug(...roles, tags.username, 'is authorized to execute', command, 'command');
             return true;
         }
     }
 
-    authLogger.warn(...roles, tags.username, 'is not authorized to execute', command);
+    authLogger.warn(...roles, tags.username, 'is not authorized to execute', command, 'command');
     return false;
 }
 
