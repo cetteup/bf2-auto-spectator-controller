@@ -1,6 +1,6 @@
 {
   "name": "bf2-auto-spectator-controller",
-  "version": "1.4.2",
+  "version": "1.5.0",
   "description": "An online controller for the bf2 auto spectator",
   "main": "dist/index.js",
   "engines": {
