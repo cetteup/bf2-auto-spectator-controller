@@ -2,7 +2,7 @@ import { CommandHandler } from './typing';
 import { Role } from '../permissions';
 import * as net from 'net';
 import Config from '../config';
-import { isValidPort } from '../utils';
+import { formatDuration, isValidPort } from '../utils';
 import { GameServer } from '../classes';
 import { handlerLogger } from './common';
 
@@ -58,6 +58,18 @@ export const server: CommandHandler = {
             return;
         }
         await client.say(Config.SPECTATOR_CHANNEL, `Currently spectating on: ${state.currentServer.name} - bf2.tv/servers/${state.currentServer.ip}:${state.currentServer.port}`);
+    }
+};
+
+export const since: CommandHandler = {
+    identifier: 'since',
+    permittedRoles: [Role.Viewer],
+    execute: async (client, io, state) => {
+        if (!state.currentServer?.hasSpectatorJoined()) {
+            await client.say(Config.SPECTATOR_CHANNEL, 'Whoops, spectator is not on a server');
+            return;
+        }
+        await client.say(Config.SPECTATOR_CHANNEL, `Joined current server ${formatDuration(state.currentServer!.getTimeOnServer()!)} ago`);
     }
 };
 

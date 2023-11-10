@@ -5,6 +5,7 @@ import { Schema, ValidationError, Validator } from 'jsonschema';
 import fs from 'fs';
 import logger from './logger';
 import yaml from 'js-yaml';
+import { Duration } from 'luxon';
 
 export function loadConfig<T>(configFileName: string, schemaFileName: string): T[] {
     const configPath = path.join(Config.ROOT_DIR, configFileName);
@@ -65,4 +66,30 @@ export async function isAccessTokenValid(accessToken: string): Promise<boolean> 
 
 export function formatOAuthPassword(accessToken: string) {
     return `oauth:${accessToken}`;
+}
+
+export function formatDuration(duration: Duration): string {
+    duration.rescale();
+    if (duration < Duration.fromObject({ minutes: 1 })) {
+        return 'just a moment';
+    }
+
+    const elements: string[] = [];
+    const hours = duration.get('hours');
+    if (hours >= 2) {
+        elements.push(`${hours.toFixed(0)} hours`);
+    }
+    else if (hours >= 1) {
+        elements.push('an hour');
+    }
+
+    const minutes = duration.get('minutes');
+    if (minutes >= 2) {
+        elements.push(`${minutes.toFixed(0)} minutes`);
+    }
+    else if (minutes >= 1) {
+        elements.push('a minute');
+    }
+
+    return elements.join(' and ');
 }
