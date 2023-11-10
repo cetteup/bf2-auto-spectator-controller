@@ -69,13 +69,13 @@ export function formatOAuthPassword(accessToken: string) {
 }
 
 export function formatDuration(duration: Duration): string {
-    duration.rescale();
-    if (duration < Duration.fromObject({ minutes: 1 })) {
+    const rescaled = duration.rescale();
+    if (rescaled < Duration.fromObject({ minutes: 1 })) {
         return 'just a moment';
     }
 
     const elements: string[] = [];
-    const hours = duration.get('hours');
+    const hours = rescaled.get('hours');
     if (hours >= 2) {
         elements.push(`${hours.toFixed(0)} hours`);
     }
@@ -83,7 +83,7 @@ export function formatDuration(duration: Duration): string {
         elements.push('an hour');
     }
 
-    const minutes = duration.get('minutes');
+    const minutes = rescaled.get('minutes');
     if (minutes >= 2) {
         elements.push(`${minutes.toFixed(0)} minutes`);
     }

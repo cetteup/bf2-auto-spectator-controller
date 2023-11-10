@@ -37,6 +37,13 @@ describe('format duration', () => {
         expect(formatted).toBe('2 hours');
     });
 
+    test('rescale smaller units', () => {
+        const duration = Duration.fromObject({ seconds: 60 });
+        const formatted = formatDuration(duration);
+
+        expect(formatted).toBe('a minute');
+    });
+
     test('one hour and one minute', () => {
         const duration = Duration.fromObject({ hours: 1, minutes: 1 });
         const formatted = formatDuration(duration);
