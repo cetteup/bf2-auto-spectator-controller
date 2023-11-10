@@ -143,11 +143,13 @@ class Controller {
     }
 
     private async handleServerRotationSelectionTask(): Promise<void> {
-        const { currentServer, serverToJoin, rotationServers } = this.state;
+        // Clean up rotation servers before running selection
+        this.removeObsoleteRotationServers();
 
         // Only run selection if the spectator
         // a) is not currently on a server or
         // b) does not currently have a server to join and has stayed on the current server for at least the minimum duration
+        const { currentServer, serverToJoin, rotationServers } = this.state;
         const timeOnServer = currentServer?.getTimeOnServer();
         if (!currentServer || !serverToJoin && timeOnServer && timeOnServer >= Config.MINIMUM_TIME_ON_SERVER) {
             const selected = this.selectRotationServer(rotationServers);
@@ -253,6 +255,17 @@ class Controller {
                 }
             });
         }
+    }
+    
+    private removeObsoleteRotationServers(): void {
+        const { currentServer, serverToJoin, rotationServers } = this.state;
+        this.state.rotationServers = rotationServers.filter((s) => {
+            if (s.rotationConfig.temporary && !s.equals(currentServer) && !s.equals(serverToJoin)) {
+                this.logger.debug('Removing obsolete temporary rotation server', s.ip, s.port);
+                return false;
+            }
+            return true;
+        });
     }
 
     private selectRotationServer(options: GameServer[]): GameServer | undefined {
