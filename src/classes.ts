@@ -93,13 +93,14 @@ export class GameServer {
     }
 
     selectable(): boolean {
-        // Copy legacy minPlayers condition from config to conditions
+        // Move legacy minPlayers condition from config to conditions
         if (this.rotationConfig.minPlayers) {
             logger.warn('rotationConfig.minPlayers is deprecated and will be removed in a future release, use rotationConfig.conditions.minPlayers instead', this.ip, this.port);
             this.rotationConfig.conditions = {
                 minPlayers: this.rotationConfig.minPlayers,
                 ...this.rotationConfig.conditions
             };
+            delete this.rotationConfig.minPlayers;
         }
 
         // Fallback should *always* be selectable
