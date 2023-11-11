@@ -20,4 +20,5 @@ export default abstract class Config {
     static readonly ROTATION_SCORE_SAMPLE_SIZE = Number(process.env.ROTATION_SCORE_SAMPLE_SIZE) || 5;
     static readonly ACTIVE_PLAYER_SCORE_RATIO = Number(process.env.ACTIVE_PLAYER_SCORE_RATIO) || 0.1;
     static readonly FREE_SLOT_SCORE_PENALTY_THRESHOLD = Number(process.env.FREE_SLOT_SCORE_PENALTY_THRESHOLD) || 0.9;
+    static readonly MAX_FREE_SLOT_PENALTY = Number(process.env.MAX_FREE_SLOT_PENALTY) || 0.5;
 }

@@ -178,7 +178,7 @@ export class GameServer {
     As slots past the configured threshold are taken up,
     the penalty decreases in value and thus increases in effect.
 
-    1 <= penalty < 0, 1 meaning no penalty.
+    1 <= penalty <= Config.MAX_FREE_SLOT_PENALTY, 1 meaning no penalty.
      */
     private computeFreeSlotPenalty(): number {
         if (Config.FREE_SLOT_SCORE_PENALTY_THRESHOLD >= 1) {
@@ -189,8 +189,12 @@ export class GameServer {
         const numPlayers = this.numPlayers ?? 0;
         const maxPlayers = this.maxPlayers ?? 1;
         const reservedSlots = this.reservedSlots ?? 0;
+        const penalty = (maxPlayers - numPlayers - reservedSlots) / ((1 - Config.FREE_SLOT_SCORE_PENALTY_THRESHOLD) * maxPlayers);
 
-        return Math.min(1, (maxPlayers - numPlayers - reservedSlots) / ((1 - Config.FREE_SLOT_SCORE_PENALTY_THRESHOLD) * maxPlayers));
+        // Limit value range to
+        // a) not apply any positive score effect if server has many free slots
+        // b) keep score from being reduced to 0 if there are no free slots
+        return Math.min(1, Math.max(penalty, Config.MAX_FREE_SLOT_PENALTY));
     }
     
     join(io: socketio.Server): void {
