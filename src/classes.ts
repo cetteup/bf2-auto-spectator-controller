@@ -14,10 +14,12 @@ export class GameServer {
 
     stateLastUpdatedAt: DateTime | undefined;
     name: string | undefined;
+    numPlayers: number | undefined;
     maxPlayers: number | undefined;
     mapName: string | undefined;
     mapSize: number | undefined;
     gameType: string | undefined;
+    reservedSlots: number | undefined;
     noVehicles: boolean | undefined;
     joinLinkWeb: string | undefined;
     players: Array<Player> | undefined;
@@ -39,10 +41,12 @@ export class GameServer {
             const resp = await axios.get(`https://api.bflist.io/bf2/v1/servers/${this.ip}:${this.port}`);
             const state = resp.data;
             this.name = state.name;
+            this.numPlayers = state.numPlayers;
             this.maxPlayers = state.maxPlayers;
             this.mapName = state.mapName;
             this.mapSize = state.mapSize;
             this.gameType = state.gameType;
+            this.reservedSlots = state.reservedSlots;
             this.noVehicles = state.noVehicles;
             this.joinLinkWeb = state.joinLinkWeb;
             // Add players sorted by score (desc)
@@ -153,15 +157,40 @@ export class GameServer {
     }
 
     score(): number {
-        const humanPlayers = this.getHumanPlayers()?.length ?? 0;
-        const activePlayers = this.getActivePlayers()?.length ?? 0;
         const weight = this.rotationConfig.weight ?? 1.0;
-        const currentScore = ((1 - Config.ACTIVE_PLAYER_SCORE_RATIO) * humanPlayers + Config.ACTIVE_PLAYER_SCORE_RATIO * activePlayers) * weight;
+        const currentScore = this.computeBaseScore() * weight * this.computeFreeSlotPenalty();
 
         // Calculate score based on a rolling average of scores
         // (avoids switching servers shortly after a server crashes or many players get kicked/leave after a round end/map change)
         this.scores.push(currentScore);
         return this.scores.getItems().reduce((acc, val) => acc +  val, 0) / this.scores.getSize();
+    }
+
+    private computeBaseScore(): number {
+        const humanPlayers = this.getHumanPlayers()?.length ?? 0;
+        const activePlayers = this.getActivePlayers()?.length ?? 0;
+
+        return (1 - Config.ACTIVE_PLAYER_SCORE_RATIO) * humanPlayers + Config.ACTIVE_PLAYER_SCORE_RATIO * activePlayers;
+    }
+
+    /*
+    Computes a (potential) penalty for few free slots on the server.
+    As slots past the configured threshold are taken up,
+    the penalty decreases in value and thus increases in effect.
+
+    1 <= penalty < 0, 1 meaning no penalty.
+     */
+    private computeFreeSlotPenalty(): number {
+        if (Config.FREE_SLOT_SCORE_PENALTY_THRESHOLD >= 1) {
+            // Return 1 = no penalty if penalty threshold is 100% server fill rate
+            return 1;
+        }
+
+        const numPlayers = this.numPlayers ?? 0;
+        const maxPlayers = this.maxPlayers ?? 1;
+        const reservedSlots = this.reservedSlots ?? 0;
+
+        return Math.min(1, (maxPlayers - numPlayers - reservedSlots) / ((1 - Config.FREE_SLOT_SCORE_PENALTY_THRESHOLD) * maxPlayers));
     }
     
     join(io: socketio.Server): void {
