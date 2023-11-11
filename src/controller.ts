@@ -228,7 +228,7 @@ class Controller {
                     }
                 }
 
-                if (!this.state.currentServer?.equals(server)) {
+                if (!this.state.currentServer?.equals(server) || !this.state.currentServer?.hasSpectatorJoined()) {
                     server.startTimeOnServer();
                     this.state.currentServer = server;
 
