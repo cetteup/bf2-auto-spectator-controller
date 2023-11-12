@@ -6,7 +6,7 @@ import logger from './logger';
 import { CommandHandler } from './handlers/typing';
 import { authorize } from './permissions';
 import { ControllerState, CustomCommand, ServerConfig, ServerDTO, TwitchTokenResponse } from './typing';
-import { next, rejoin, respawn, restart, resume, start, stay, stop } from './handlers/forwarded';
+import { debug, next, rejoin, respawn, restart, resume, start, stay, stop } from './handlers/forwarded';
 import { join, joinserver, map, players, server, since, team, top } from './handlers/managed';
 import { active, stats, summary } from './handlers/stats';
 import { GameServer } from './classes';
@@ -61,7 +61,7 @@ class Controller {
         });
 
         this.handlers = [
-            start, stop, next, respawn, restart, rejoin, resume, stay,
+            start, stop, debug, next, respawn, restart, rejoin, resume, stay,
             joinserver, server, since, join, players, top, map, team,
             stats, summary, active
         ];

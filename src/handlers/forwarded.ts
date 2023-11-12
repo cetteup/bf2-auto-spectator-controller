@@ -30,6 +30,14 @@ export const stop: CommandHandler = {
     }
 };
 
+export const debug: CommandHandler = {
+    identifier: 'debug',
+    permittedRoles: [Role.Moderator],
+    execute: (client, io) => {
+        return forwardSpectatorCommand(client, io, 'debug');
+    }
+};
+
 export const next: CommandHandler = {
     identifier: 'next',
     aliases: ['n', 'skip'],
