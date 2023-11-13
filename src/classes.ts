@@ -149,7 +149,7 @@ export class GameServer {
             return false;
         }
 
-        if (conditions.noVehicles && this.noVehicles != conditions.noVehicles) {
+        if (conditions.noVehicles !== undefined && this.noVehicles != conditions.noVehicles) {
             return false;
         }
 
