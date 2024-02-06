@@ -14,10 +14,24 @@ export type ServerDTO = {
     password: string | null
 }
 
+export type GamePhase =
+    'initializing'
+    | 'launching'
+    | 'in-menu'
+    | 'loading'
+    | 'spawning'
+    | 'spectating'
+    | 'between-rounds'
+    | 'closing'
+    | 'starting'
+    | 'stopping'
+    | 'stopped'
+
 export type ControllerState = {
     rotationServers: GameServer[]
     currentServer?: GameServer
     serverToJoin?: GameServer
+    gamePhase: GamePhase
 }
 
 export type TwitchTokenResponse = {

@@ -5,7 +5,7 @@ import Config from './config';
 import logger from './logger';
 import { CommandHandler } from './handlers/typing';
 import { authorize } from './permissions';
-import { ControllerState, CustomCommand, ServerConfig, ServerDTO, TwitchTokenResponse } from './typing';
+import { ControllerState, CustomCommand, GamePhase, ServerConfig, ServerDTO, TwitchTokenResponse } from './typing';
 import { debug, next, rejoin, respawn, restart, resume, start, stay, stop } from './handlers/forwarded';
 import { join, joinserver, map, players, server, since, team, top } from './handlers/managed';
 import { active, stats, summary } from './handlers/stats';
@@ -68,7 +68,8 @@ class Controller {
 
         const serverConfigs = loadConfig<ServerConfig>('servers.yaml', 'servers.schema.json');
         this.state = {
-            rotationServers: serverConfigs.map((s) => new GameServer(s.ip, s.port, s.password, s.rotationConfig))
+            rotationServers: serverConfigs.map((s) => new GameServer(s.ip, s.port, s.password, s.rotationConfig)),
+            gamePhase: 'initializing'
         };
 
         // Update current server's state every 20 seconds
@@ -238,6 +239,15 @@ class Controller {
                     }
 
                     this.logger.info('Current server updated', ip, port);
+                }
+            });
+        });
+
+        this.io.of('/game').on('connect', (socket: socketio.Socket) => {
+            socket.on('phase', (phase: GamePhase) => {
+                if (phase != this.state.gamePhase) {
+                    this.logger.debug('Game phase updated', phase);
+                    this.state.gamePhase = phase;
                 }
             });
         });
