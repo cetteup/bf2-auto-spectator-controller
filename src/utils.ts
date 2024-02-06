@@ -6,6 +6,7 @@ import fs from 'fs';
 import logger from './logger';
 import yaml from 'js-yaml';
 import { Duration } from 'luxon';
+import { GamePhase } from './typing';
 
 export function loadConfig<T>(configFileName: string, schemaFileName: string): T[] {
     const configPath = path.join(Config.ROOT_DIR, configFileName);
@@ -92,4 +93,27 @@ export function formatDuration(duration: Duration): string {
     }
 
     return elements.join(' and ');
+}
+
+export function isRotationEnabledGamePhase(phase: GamePhase): boolean {
+    switch (phase) {
+        case 'initializing':
+        case 'launching':
+        case 'in-menu':
+        case 'between-rounds':
+        case 'closing':
+        case 'starting':
+        case 'stopping':
+        case 'stopped':
+        case 'halted':
+            return true;
+
+        case 'loading':
+        case 'spawning':
+        case 'spectating':
+            return false;
+
+        default:
+            return false;
+    }
 }

@@ -13,7 +13,7 @@ import { GameServer } from './classes';
 import { Logger } from 'tslog';
 import * as cron from 'node-cron';
 import axios from 'axios';
-import { formatOAuthPassword, isAccessTokenValid, loadConfig } from './utils';
+import { formatOAuthPassword, isAccessTokenValid, isRotationEnabledGamePhase, loadConfig } from './utils';
 import { DateTime } from 'luxon';
 
 class Controller {
@@ -34,7 +34,6 @@ class Controller {
     private readonly state: ControllerState;
 
     private serverStateUpdateTask: cron.ScheduledTask;
-    private serverRotationSelectionTask: cron.ScheduledTask;
 
     constructor() {
         this.logger = logger.getChildLogger({ name: 'ControllerLogger' });
@@ -76,13 +75,6 @@ class Controller {
         // (bflist updates at 00, 20 and 40, so get fresh data at 10, 30 and 50)
         this.serverStateUpdateTask = cron.schedule('10,30,50 * * * * *', async () => {
             await this.handleServerStateUpdateTask();
-        }, {
-            scheduled: false
-        });
-
-        // Re-select a server from the rotation every 5 minutes
-        this.serverRotationSelectionTask = cron.schedule(`*/${Config.ROTATION_SELECTION_INTERVAL} * * * *`, async () => {
-            await this.handleServerRotationSelectionTask();
         }, {
             scheduled: false
         });
@@ -143,9 +135,14 @@ class Controller {
         await Promise.all(updates);
     }
 
-    private async handleServerRotationSelectionTask(): Promise<void> {
+    private async runServerRotationSelection(): Promise<void> {
         // Clean up rotation servers before running selection
         this.removeObsoleteRotationServers();
+
+        // Don't run selection if there is no choice to make (e.g. if rotation is not configured/enabled)
+        if (this.state.rotationServers.filter((s) => !s.rotationConfig.temporary).length == 0) {
+            return;
+        }
 
         // Apply selection if the spectator
         // a) is not currently on a server or
@@ -167,7 +164,7 @@ class Controller {
         }
         else if (!serverToJoin && timeOnServer) {
             const switchPossibleAt = DateTime.now().plus(Config.MINIMUM_TIME_ON_SERVER.minus(timeOnServer));
-            this.logger.debug('Server switch not possible yet, not applying server selection until', switchPossibleAt.toUTC().toISO());
+            this.logger.debug('Server switch not possible yet, not applying server selection before', switchPossibleAt.toUTC().toISO());
         }
         else if (serverToJoin) {
             this.logger.debug('Server switch already queued, not applying server selection');
@@ -244,10 +241,19 @@ class Controller {
         });
 
         this.io.of('/game').on('connect', (socket: socketio.Socket) => {
-            socket.on('phase', (phase: GamePhase) => {
+            socket.on('phase', async (phase: GamePhase) => {
                 if (phase != this.state.gamePhase) {
                     this.logger.debug('Game phase updated', phase);
+                    const previousPhase = this.state.gamePhase;
                     this.state.gamePhase = phase;
+
+                    // Only run selection when transitioning from the initial or a non-rotation-enabled phase to a
+                    // rotation-enabled one, else we might run the selection in very short intervals and/or run it when
+                    // spectator is e.g. in menu already joining a server
+                    if ((previousPhase == 'initializing' || !isRotationEnabledGamePhase(previousPhase)) && isRotationEnabledGamePhase(phase)) {
+                        this.logger.debug('Entered rotation-enabled game phase, running server rotation selection');
+                        await this.runServerRotationSelection();
+                    }
                 }
             });
         });
@@ -326,10 +332,7 @@ class Controller {
         await this.handleServerStateUpdateTask();
         this.serverStateUpdateTask.start();
 
-        if (this.state.rotationServers.length > 0) {
-            await this.handleServerRotationSelectionTask();
-            this.serverRotationSelectionTask.start();
-        } else {
+        if (this.state.rotationServers.length == 0) {
             this.logger.info('No servers configured, disabling automatic server rotation');
         }
 

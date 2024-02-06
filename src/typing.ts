@@ -26,6 +26,7 @@ export type GamePhase =
     | 'starting'
     | 'stopping'
     | 'stopped'
+    | 'halted'
 
 export type ControllerState = {
     rotationServers: GameServer[]
