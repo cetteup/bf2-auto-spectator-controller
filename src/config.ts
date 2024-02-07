@@ -16,7 +16,7 @@ export default abstract class Config {
     static readonly REQUEST_TIMEOUT: number = Number(process.env.REQUEST_TIMEOUT) || 4000;
     static readonly LOG_CHAT: boolean = !!Number(process.env.LOG_CHAT);
     static readonly MINIMUM_TIME_ON_SERVER: Duration = Duration.fromObject({ minutes: Number(process.env.MINIMUM_TIME_ON_SERVER) || 15 });
-    static readonly ROTATION_SELECTION_INTERVAL = Number(process.env.ROTATION_SELECTION_INTERVAL) || 5;
+    static readonly ROTATION_SCORE_INTERVAL = Number(process.env.ROTATION_SCORE_INTERVAL) || 5;
     static readonly ROTATION_SCORE_SAMPLE_SIZE = Number(process.env.ROTATION_SCORE_SAMPLE_SIZE) || 5;
     static readonly ACTIVE_PLAYER_SCORE_RATIO = Number(process.env.ACTIVE_PLAYER_SCORE_RATIO) || 0.1;
     static readonly FREE_SLOT_SCORE_PENALTY_THRESHOLD = Number(process.env.FREE_SLOT_SCORE_PENALTY_THRESHOLD) || 0.9;

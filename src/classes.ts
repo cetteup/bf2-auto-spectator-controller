@@ -156,13 +156,16 @@ export class GameServer {
         return true;
     }
 
-    score(): number {
+    updateScore(): void {
         const weight = this.rotationConfig.weight ?? 1.0;
         const currentScore = this.computeBaseScore() * weight * this.computeFreeSlotPenalty();
 
         // Calculate score based on a rolling average of scores
         // (avoids switching servers shortly after a server crashes or many players get kicked/leave after a round end/map change)
         this.scores.push(currentScore);
+    }
+
+    getScore(): number {
         return this.scores.getItems().reduce((acc, val) => acc +  val, 0) / this.scores.getSize();
     }
 

@@ -34,6 +34,7 @@ class Controller {
     private readonly state: ControllerState;
 
     private serverStateUpdateTask: cron.ScheduledTask;
+    private serverScoreUpdateTask: cron.ScheduledTask;
 
     constructor() {
         this.logger = logger.getChildLogger({ name: 'ControllerLogger' });
@@ -75,6 +76,13 @@ class Controller {
         // (bflist updates at 00, 20 and 40, so get fresh data at 10, 30 and 50)
         this.serverStateUpdateTask = cron.schedule('10,30,50 * * * * *', async () => {
             await this.handleServerStateUpdateTask();
+        }, {
+            scheduled: false
+        });
+
+        // Update server scores according to configured interval (interval influences how fast scores change)
+        this.serverScoreUpdateTask = cron.schedule(`*/${Config.ROTATION_SCORE_INTERVAL} * * * *`, async () => {
+            await this.handleServerScoreUpdateTask();
         }, {
             scheduled: false
         });
@@ -133,6 +141,13 @@ class Controller {
             return s.updateState();
         });
         await Promise.all(updates);
+    }
+
+    private async handleServerScoreUpdateTask(): Promise<void> {
+        for (const s of this.state.rotationServers) {
+            this.logger.debug('Updating game server score', s.ip, s.port);
+            s.updateScore();
+        }
     }
 
     private async runServerRotationSelection(): Promise<void> {
@@ -300,7 +315,7 @@ class Controller {
 
         const candidates = options
             .map((s) => {
-                const score = s.score();
+                const score = s.getScore();
                 const selectable = s.selectable();
                 this.logger.debug('Current score for rotation server', s.ip, s.port, 'is', score, `(${selectable ? 'selectable' : 'not selectable'})`);
 
@@ -332,7 +347,10 @@ class Controller {
         await this.handleServerStateUpdateTask();
         this.serverStateUpdateTask.start();
 
-        if (this.state.rotationServers.length == 0) {
+        if (this.state.rotationServers.length > 0) {
+            await this.handleServerScoreUpdateTask();
+            this.serverScoreUpdateTask.start();
+        } else {
             this.logger.info('No servers configured, disabling automatic server rotation');
         }
 
