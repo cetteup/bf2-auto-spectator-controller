@@ -52,6 +52,60 @@ export const joinserver: CommandHandler = {
     }
 };
 
+export const ignore: CommandHandler = {
+    identifier: 'ignore',
+    permittedRoles: [Role.Moderator],
+    execute: async (client, io, state, args) => {
+        const [ip, port] = args;
+
+        if (!net.isIPv4(ip) || !isValidPort(Number(port))) {
+            await client.say(Config.SPECTATOR_CHANNEL, 'Usage: !ignore [ip] [port]');
+            return;
+        }
+
+        const server = state.rotationServers.find((s) => s.ip == ip && s.port == Number(port));
+        if (!server) {
+            await client.say(Config.SPECTATOR_CHANNEL, 'I cannot ignore what don\'t know. No such server in the rotation.');
+            return;
+        }
+        if (server.rotationConfig.ignored) {
+            await client.say(Config.SPECTATOR_CHANNEL, 'Reading yesterdays paper again? Already ignoring the server.');
+            return;
+        }
+
+        handlerLogger.info('Setting ignored flag on server', server.ip, server.port);
+        server.rotationConfig.ignored = true;
+        await client.say(Config.SPECTATOR_CHANNEL, '10-4. Server added to the naughty list.');
+    }
+};
+
+export const notice: CommandHandler = {
+    identifier: 'notice',
+    permittedRoles: [Role.Moderator],
+    execute: async (client, io, state, args) => {
+        const [ip, port] = args;
+
+        if (!net.isIPv4(ip) || !isValidPort(Number(port))) {
+            await client.say(Config.SPECTATOR_CHANNEL, 'Usage: !notice [ip] [port]');
+            return;
+        }
+
+        const server = state.rotationServers.find((s) => s.ip == ip && s.port == Number(port));
+        if (!server) {
+            await client.say(Config.SPECTATOR_CHANNEL, 'How can I notice what does not exist?. No such server in the rotation.');
+            return;
+        }
+        if (!server.rotationConfig.ignored) {
+            await client.say(Config.SPECTATOR_CHANNEL, 'Um, I am not ignoring that server');
+            return;
+        }
+
+        handlerLogger.info('Removing ignored flag from server', server.ip, server.port);
+        server.rotationConfig.ignored = false;
+        await client.say(Config.SPECTATOR_CHANNEL, 'I feel like I have seen that server before. Glad it\'s back!');
+    }
+};
+
 export const server: CommandHandler = {
     identifier: 'server',
     aliases: ['currentserver'],
