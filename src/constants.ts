@@ -1,7 +1,7 @@
-import { SpectatorCommand } from './typing';
+import { ForwardedSpectatorCommand } from './typing';
 
 export default abstract class Constants {
-    static readonly COMMAND_RESPONSES: Record<SpectatorCommand, string> = {
+    static readonly COMMAND_RESPONSES: Record<ForwardedSpectatorCommand, string> = {
         start: 'Yessir, stream will start shorly',
         stop: 'If you say so... Stream will stop shortly',
         debug: 'Guess I can do that. Toggling debug options.',

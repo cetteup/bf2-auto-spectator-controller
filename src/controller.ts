@@ -5,7 +5,15 @@ import Config from './config';
 import logger from './logger';
 import { CommandHandler } from './handlers/typing';
 import { authorize } from './permissions';
-import { ControllerState, CustomCommand, GamePhase, ServerConfig, ServerDTO, TwitchTokenResponse } from './typing';
+import {
+    ControllerState,
+    CustomCommand,
+    GamePhaseDTO,
+    HaltedPhaseDTO,
+    ServerConfig,
+    ServerDTO,
+    TwitchTokenResponse
+} from './typing';
 import { debug, next, rejoin, respawn, restart, resume, start, stay, stop } from './handlers/forwarded';
 import { join, joinserver, map, players, server, since, team, top } from './handlers/managed';
 import { active, stats, summary } from './handlers/stats';
@@ -15,6 +23,7 @@ import * as cron from 'node-cron';
 import axios from 'axios';
 import { formatOAuthPassword, isAccessTokenValid, isRotationEnabledGamePhase, loadConfig } from './utils';
 import { DateTime } from 'luxon';
+import { sendSpectatorCommand } from './commands';
 
 class Controller {
     private logger: Logger;
@@ -150,6 +159,28 @@ class Controller {
         }
     }
 
+    private async handleRotationEnabledPhaseEntered(): Promise<void> {
+        this.logger.debug('Entered rotation-enabled game phase, running server rotation selection');
+        await this.runServerRotationSelection();
+    }
+
+    private async handleHaltedPhaseEntered({ server: { ip, port, password }}: HaltedPhaseDTO): Promise<void> {
+        const server = this.state.rotationServers.find((s) => {
+            return s.ip == ip && s.port == Number(port) && s.password == password;
+        });
+
+        if (!server) {
+            this.logger.warn('Received halted phase server is not in rotation', ip, port);
+        }
+        else if (!server.rotationConfig.ignored) {
+            this.logger.info('Entered halted phase, ignoring server', ip, port);
+            server.rotationConfig.ignored = true;
+        }
+
+        this.logger.info('Running server rotation selection to resolve halted phase');
+        await this.runServerRotationSelection();
+    }
+
     private async runServerRotationSelection(): Promise<void> {
         // Clean up rotation servers before running selection
         this.removeObsoleteRotationServers();
@@ -159,15 +190,23 @@ class Controller {
             return;
         }
 
+        const { gamePhase, rotationServers } = this.state;
+        const halted = gamePhase == 'halted';
+        // When in halted phase, consider any server selectable to enable release from halt
+        const selected = this.selectRotationServer(rotationServers, halted);
+        if (!selected) {
+            return;
+        }
+
         // Apply selection if the spectator
-        // a) is not currently on a server or
-        // b) does not currently have a server to join and has stayed on the current server for at least the minimum duration
-        const { currentServer, serverToJoin, rotationServers } = this.state;
+        // a) is in the halted phase
+        // b) is not currently on a server or
+        // c) does not currently have a server to join and has stayed on the current server for at least the minimum duration
+        const { currentServer, serverToJoin } = this.state;
         const timeOnServer = currentServer?.getTimeOnServer();
-        const selected = this.selectRotationServer(rotationServers);
-        if (!currentServer || !serverToJoin && timeOnServer && timeOnServer >= Config.MINIMUM_TIME_ON_SERVER) {
-            if (selected && !selected?.equals(currentServer) && !selected?.equals(serverToJoin)) {
-                this.logger.info('Selected new rotation server', selected?.ip, selected?.port);
+        if (halted || !currentServer || !serverToJoin && timeOnServer && timeOnServer >= Config.MINIMUM_TIME_ON_SERVER) {
+            if (!selected.equals(currentServer) && !selected.equals(serverToJoin)) {
+                this.logger.info('Selected new rotation server', selected.ip, selected.port);
                 this.state.serverToJoin = selected;
                 selected.join(this.io);
 
@@ -175,6 +214,13 @@ class Controller {
                 if (currentServer) {
                     await this.client.say(Config.SPECTATOR_CHANNEL, `Switching servers, joining ${selected.name} shortly`);
                 }
+            }
+
+            // Release halted state if server to join (now) is the selected server
+            // The spectator would stay in halted phase if we already sent a join server but never issued the release command
+            if (selected.equals(this.state.serverToJoin) && halted) {
+                this.logger.info('Pending server switch in halted phase, sending release command');
+                sendSpectatorCommand(this.io, 'release');
             }
         }
         else if (!serverToJoin && timeOnServer) {
@@ -253,21 +299,34 @@ class Controller {
                     this.logger.info('Current server updated', ip, port);
                 }
             });
+            
+            socket.on('reset', () => {
+                if (this.state.currentServer) {
+                    this.state.currentServer = undefined;
+                    this.logger.info('Current server reset');
+                }
+            });
         });
 
         this.io.of('/game').on('connect', (socket: socketio.Socket) => {
-            socket.on('phase', async (phase: GamePhase) => {
+            socket.on('phase', async (dto: GamePhaseDTO) => {
+                const { phase } = dto;
                 if (phase != this.state.gamePhase) {
                     this.logger.debug('Game phase updated', phase);
                     const previousPhase = this.state.gamePhase;
                     this.state.gamePhase = phase;
 
+                    // Handle any phase-specific actions (will *only* run the phase-specific action)
+                    switch (phase) {
+                        case 'halted':
+                            return await this.handleHaltedPhaseEntered(dto);
+                    }
+
                     // Only run selection when transitioning from the initial or a non-rotation-enabled phase to a
                     // rotation-enabled one, else we might run the selection in very short intervals and/or run it when
                     // spectator is e.g. in menu already joining a server
                     if ((previousPhase == 'initializing' || !isRotationEnabledGamePhase(previousPhase)) && isRotationEnabledGamePhase(phase)) {
-                        this.logger.debug('Entered rotation-enabled game phase, running server rotation selection');
-                        await this.runServerRotationSelection();
+                        return await this.handleRotationEnabledPhaseEntered();
                     }
                 }
             });
@@ -299,14 +358,19 @@ class Controller {
         });
     }
 
-    private selectRotationServer(options: GameServer[]): GameServer | undefined {
+    private selectRotationServer(options: GameServer[], allSelectable = false): GameServer | undefined {
         if (options.length == 0) {
             this.logger.warn('No servers in rotation');
             return;
         }
 
         if (options.length == 1) {
-            return options[0];
+            const [candidate] = options;
+            if (candidate.rotationConfig.ignored) {
+                this.logger.warn('Only available rotation server is ignored', candidate.ip, candidate.port);
+                return;
+            }
+            return candidate;
         }
 
         if (!options.some((s) => s.rotationConfig.fallback)) {
@@ -314,10 +378,24 @@ class Controller {
         }
 
         const candidates = options
+            .filter((s) => {
+                if (s.rotationConfig.ignored) {
+                    this.logger.warn('Rotation server is ignored and will be excluded from selection', s.ip, s.port);
+                    return false;
+                }
+                return true;
+            })
             .map((s) => {
                 const score = s.getScore();
                 const selectable = s.selectable();
-                this.logger.debug('Current score for rotation server', s.ip, s.port, 'is', score, `(${selectable ? 'selectable' : 'not selectable'})`);
+                this.logger.debug(
+                    'Current score for rotation server',
+                    s.ip,
+                    s.port,
+                    'is',
+                    score,
+                    `(${selectable ? 'selectable' : 'not selectable'}${allSelectable && !selectable ? ', overridden to selectable' : ''})`
+                );
 
                 return {
                     server: s,
@@ -325,7 +403,12 @@ class Controller {
                     selectable
                 };
             })
-            .filter((c) => c.selectable)
+            .filter((c) => {
+                if (allSelectable) {
+                    return true;
+                }
+                return c.selectable;
+            })
             .sort((a, b) => {
                 return a.score - b.score;
             })

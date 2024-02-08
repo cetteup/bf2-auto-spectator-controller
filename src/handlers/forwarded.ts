@@ -1,16 +1,14 @@
 import * as socketio from 'socket.io';
 import * as tmi from 'tmi.js';
 import Config from '../config';
-import { ForwardCommandDTO, SpectatorCommand } from '../typing';
 import Constants from '../constants';
 import { CommandHandler } from './typing';
 import { Role } from '../permissions';
+import { sendSpectatorCommand } from '../commands';
+import { ForwardedSpectatorCommand } from '../typing';
 
-export async function forwardSpectatorCommand(client: tmi.Client, io: socketio.Server, command: SpectatorCommand): Promise<void> {
-    io.emit('command', <ForwardCommandDTO>{
-        key: command,
-        value: true
-    });
+export async function forwardSpectatorCommand(client: tmi.Client, io: socketio.Server, command: ForwardedSpectatorCommand): Promise<void> {
+    sendSpectatorCommand(io, command);
     await client.say(Config.SPECTATOR_CHANNEL, Constants.COMMAND_RESPONSES[command]);
 }
 

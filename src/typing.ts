@@ -1,12 +1,19 @@
 import { GameServer } from './classes';
 import { Role } from './permissions';
 
-export type SpectatorCommand = 'start' | 'stop' | 'debug' | 'game_restart' | 'rotation_pause' | 'rotation_resume' | 'next_player' | 'respawn' | 'rejoin'
+export type SpectatorCommand =
+    'start'
+    | 'stop'
+    | 'release'
+    | 'debug'
+    | 'game_restart'
+    | 'rotation_pause'
+    | 'rotation_resume'
+    | 'next_player'
+    | 'respawn'
+    | 'rejoin'
 
-export type ForwardCommandDTO = {
-    key: SpectatorCommand
-    value: boolean
-}
+export type ForwardedSpectatorCommand = Exclude<SpectatorCommand, 'release'>
 
 export type ServerDTO = {
     ip: string
@@ -27,6 +34,17 @@ export type GamePhase =
     | 'stopping'
     | 'stopped'
     | 'halted'
+
+export type NoDataPhaseDTO = {
+    phase: Exclude<GamePhase, 'halted'>
+}
+
+export type HaltedPhaseDTO = {
+    phase: 'halted'
+    server: ServerDTO
+}
+
+export type GamePhaseDTO = NoDataPhaseDTO | HaltedPhaseDTO
 
 export type ControllerState = {
     rotationServers: GameServer[]
@@ -70,5 +88,6 @@ export type RotationConfig = {
     minPlayers?: number
     fallback?: boolean
     temporary?: boolean
+    ignored?: boolean
     conditions?: RotationConditionSet
 }

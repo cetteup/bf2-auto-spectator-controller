@@ -31,6 +31,10 @@ export const joinserver: CommandHandler = {
             // Avoid adding multiple rotation entries for a single server => use server from list if possible
             const rotationServer = state.rotationServers.find((s) => s.equals(serverToJoin));
             if (rotationServer) {
+                if (rotationServer.rotationConfig.ignored) {
+                    handlerLogger.info('Join server is a currently ignored rotation server, removing ignored flag');
+                    rotationServer.rotationConfig.ignored = false;
+                }
                 state.serverToJoin = rotationServer;
             }
             else {

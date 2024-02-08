@@ -105,12 +105,12 @@ export function isRotationEnabledGamePhase(phase: GamePhase): boolean {
         case 'starting':
         case 'stopping':
         case 'stopped':
-        case 'halted':
             return true;
 
         case 'loading':
         case 'spawning':
         case 'spectating':
+        case 'halted':
             return false;
 
         default:
