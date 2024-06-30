@@ -272,28 +272,12 @@ class Controller {
                 server.join(this.io);
             }
 
-            socket.on('current', ({ ip, port, password }: ServerDTO) => {
-                let server = this.state.rotationServers.find((s) => {
+            socket.on('current', async ({ ip, port, password }: ServerDTO) => {
+                const server = this.state.rotationServers.find((s) => {
                     return s.ip == ip && s.port == Number(port) && s.password == password;
                 });
 
-                if (!server) {
-                    server = new GameServer(ip, Number(port), password, {
-                        temporary: true
-                    });
-
-                    if (this.state.rotationServers.length > 0) {
-                        // Server rotation is configured => log warning and send spectator back to expected server (if available)
-                        this.logger.warn('Received current server is not in rotation', ip, port);
-                        const expectedServer = this.state.serverToJoin ?? this.state.currentServer;
-                        if (expectedServer) {
-                            this.logger.warn('Re-issuing join command for expected server', expectedServer.ip, expectedServer.port);
-                            expectedServer.join(this.io);
-                        }
-                    }
-                }
-
-                if (!this.state.currentServer?.equals(server) || !this.state.currentServer?.hasSpectatorJoined()) {
+                if (server && (!this.state.currentServer?.equals(server) || !this.state.currentServer?.hasSpectatorJoined())) {
                     server.startTimeOnServer();
                     this.state.currentServer = server;
                     this.state.playerRotations.clear();
@@ -304,6 +288,20 @@ class Controller {
                     }
 
                     this.logger.info('Current server updated', ip, port);
+                }
+                else if (!server && this.state.rotationServers.length > 0) {
+                    // Server rotation is configured => log warning and send spectator back to expected server (if available)
+                    this.logger.warn('Received current server is not in rotation', ip, port);
+                    // Whatever we currently think the current server is, it turned out to be wrong => reset it
+                    this.state.currentServer = undefined;
+                    this.state.playerRotations.clear();
+                    // Run server selection to select a server to join if one is not selected already
+                    await this.runServerRotationSelection();
+                    const expectedServer = this.state.serverToJoin ?? this.state.currentServer;
+                    if (expectedServer) {
+                        this.logger.warn('Re-issuing join command for expected server', expectedServer.ip, expectedServer.port);
+                        expectedServer.join(this.io);
+                    }
                 }
             });
             
