@@ -27,6 +27,10 @@ class Queue<T> {
     public isFull(): boolean {
         return this.items.length == this.maxSize;
     }
+
+    public clear() {
+        this.items = [];
+    }
 }
 
 export default Queue;

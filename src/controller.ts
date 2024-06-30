@@ -22,8 +22,9 @@ import { Logger } from 'tslog';
 import * as cron from 'node-cron';
 import axios from 'axios';
 import { formatOAuthPassword, isAccessTokenValid, isRotationEnabledGamePhase, loadConfig } from './utils';
-import { DateTime } from 'luxon';
+import { DateTime, Duration } from 'luxon';
 import { sendSpectatorCommand } from './commands';
+import Queue from './queue';
 
 class Controller {
     private logger: Logger;
@@ -78,7 +79,8 @@ class Controller {
         const serverConfigs = loadConfig<ServerConfig>('servers.yaml', 'servers.schema.json');
         this.state = {
             rotationServers: serverConfigs.map((s) => new GameServer(s.ip, s.port, s.password, s.rotationConfig)),
-            gamePhase: 'initializing'
+            gamePhase: 'initializing',
+            playerRotations: new Queue<DateTime>(Config.AVERAGE_TIME_ON_PLAYER_SAMPLE_SIZE)
         };
 
         // Update current server's state every 20 seconds
@@ -181,7 +183,10 @@ class Controller {
         await this.runServerRotationSelection();
     }
 
-    private async runServerRotationSelection(): Promise<void> {
+    private async runServerRotationSelection(opts?: {
+        allSelectable?: boolean
+        ignoreTimeOnServer?: boolean
+    }): Promise<void> {
         // Clean up rotation servers before running selection
         this.removeObsoleteRotationServers();
 
@@ -193,7 +198,8 @@ class Controller {
         const { gamePhase, rotationServers } = this.state;
         const halted = gamePhase == 'halted';
         // When in halted phase, consider any server selectable to enable release from halt
-        const selected = this.selectRotationServer(rotationServers, halted);
+        const allSelectable = opts?.allSelectable || halted;
+        const selected = this.selectRotationServer(rotationServers, allSelectable);
         if (!selected) {
             return;
         }
@@ -204,7 +210,7 @@ class Controller {
         // c) does not currently have a server to join and has stayed on the current server for at least the minimum duration
         const { currentServer, serverToJoin } = this.state;
         const timeOnServer = currentServer?.getTimeOnServer();
-        if (halted || !currentServer || !serverToJoin && timeOnServer && timeOnServer >= Config.MINIMUM_TIME_ON_SERVER) {
+        if (halted || !currentServer || !serverToJoin && (timeOnServer && timeOnServer >= Config.MINIMUM_TIME_ON_SERVER || opts?.ignoreTimeOnServer)) {
             if (!selected.equals(currentServer) && !selected.equals(serverToJoin)) {
                 this.logger.info('Selected new rotation server', selected.ip, selected.port);
                 this.state.serverToJoin = selected;
@@ -290,6 +296,7 @@ class Controller {
                 if (!this.state.currentServer?.equals(server) || !this.state.currentServer?.hasSpectatorJoined()) {
                     server.startTimeOnServer();
                     this.state.currentServer = server;
+                    this.state.playerRotations.clear();
 
                     // Unset join server if it is now the current server
                     if (this.state.serverToJoin?.equals(this.state.currentServer)) {
@@ -303,6 +310,7 @@ class Controller {
             socket.on('reset', () => {
                 if (this.state.currentServer) {
                     this.state.currentServer = undefined;
+                    this.state.playerRotations.clear();
                     this.logger.info('Current server reset');
                 }
             });
@@ -327,6 +335,36 @@ class Controller {
                     // spectator is e.g. in menu already joining a server
                     if ((previousPhase == 'initializing' || !isRotationEnabledGamePhase(previousPhase)) && isRotationEnabledGamePhase(phase)) {
                         return await this.handleRotationEnabledPhaseEntered();
+                    }
+                }
+            });
+        });
+
+        this.io.of('/player').on('connect', (socket: socketio.Socket) => {
+            socket.on('rotate', async () => {
+                this.logger.debug('Rotating to next player');
+                this.state.playerRotations.push(DateTime.now());
+                if (this.state.playerRotations.isFull()) {
+                    const averageTimeOnPlayer = this.state.playerRotations.getItems().reduce((acc, val, i, arr) => {
+                        if (i + 1 < arr.length) {
+                            return acc.plus(val.diff(arr[i + 1]));
+                        }
+                        return acc;
+                    }, Duration.fromMillis(0)).milliseconds / this.state.playerRotations.getSize() / 1000;
+
+                    if (averageTimeOnPlayer < Config.AVERAGE_TIME_ON_PLAYER_THRESHOLD && !this.state.serverToJoin) {
+                        this.logger.info(
+                            'Average time on player is',
+                            averageTimeOnPlayer,
+                            'seconds, running server rotation to find (more) active server'
+                        );
+                        await this.runServerRotationSelection({
+                            allSelectable: true,
+                            ignoreTimeOnServer: true
+                        });
+                    }
+                    else {
+                        this.logger.debug('Average time on player is', averageTimeOnPlayer, 'seconds');
                     }
                 }
             });

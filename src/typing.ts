@@ -1,5 +1,7 @@
 import { GameServer } from './classes';
 import { Role } from './permissions';
+import Queue from './queue';
+import { DateTime } from 'luxon';
 
 export type SpectatorCommand =
     'start'
@@ -51,6 +53,7 @@ export type ControllerState = {
     currentServer?: GameServer
     serverToJoin?: GameServer
     gamePhase: GamePhase
+    playerRotations: Queue<DateTime>
 }
 
 export type TwitchTokenResponse = {
