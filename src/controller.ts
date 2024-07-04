@@ -263,16 +263,14 @@ class Controller {
 
         this.io.on('connect', (socket: socketio.Socket) => {
             this.logger.info('Socket connected from', socket.client.conn.remoteAddress);
-        });
 
-        this.io.of('/server').on('connect', (socket: socketio.Socket) => {
             // Send spectator (back to) server if possible
             const server = this.state.serverToJoin ?? this.state.currentServer;
             if (server) {
                 server.join(this.io);
             }
 
-            socket.on('current', async ({ ip, port, password }: ServerDTO) => {
+            socket.on('server', async ({ ip, port, password }: ServerDTO) => {
                 const server = this.state.rotationServers.find((s) => {
                     return s.ip == ip && s.port == Number(port) && s.password == password;
                 });
@@ -304,7 +302,7 @@ class Controller {
                     }
                 }
             });
-            
+
             socket.on('reset', () => {
                 if (this.state.currentServer) {
                     this.state.currentServer = undefined;
@@ -312,9 +310,7 @@ class Controller {
                     this.logger.info('Current server reset');
                 }
             });
-        });
 
-        this.io.of('/game').on('connect', (socket: socketio.Socket) => {
             socket.on('phase', async (dto: GamePhaseDTO) => {
                 const { phase } = dto;
                 if (phase != this.state.gamePhase) {
@@ -336,9 +332,7 @@ class Controller {
                     }
                 }
             });
-        });
 
-        this.io.of('/player').on('connect', (socket: socketio.Socket) => {
             socket.on('rotate', async () => {
                 this.logger.debug('Rotating to next player');
                 this.state.playerRotations.push(DateTime.now());
