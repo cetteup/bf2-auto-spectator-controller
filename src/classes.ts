@@ -5,6 +5,7 @@ import { RotationConditionSet, RotationConfig, ServerDTO } from './typing';
 import { DateTime, Duration } from 'luxon';
 import * as socketio from 'socket.io';
 import Queue from './queue';
+import { sendSpectatorCommand } from './commands';
 
 export class GameServer {
     ip: string;
@@ -203,7 +204,7 @@ export class GameServer {
     join(io: socketio.Server): void {
         // Reset timestamp to ensure that we don't count time spent previously on a server when re-joining
         this.onServerSince = undefined;
-        io.of('/server').emit('join', <ServerDTO>{
+        sendSpectatorCommand(io, 'join', {
             ip: this.ip,
             port: this.port.toString(),
             password: this.password

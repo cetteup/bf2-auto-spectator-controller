@@ -13,9 +13,15 @@ export type SpectatorCommand =
     | 'rotation_resume'
     | 'next_player'
     | 'respawn'
+    | 'join'
     | 'rejoin'
 
-export type ForwardedSpectatorCommand = Exclude<SpectatorCommand, 'release'>
+export type ForwardedSpectatorCommand = Exclude<SpectatorCommand, 'release' | 'join'>
+
+export type SpectatorCommandDTO = {
+    command: SpectatorCommand
+    args: any
+}
 
 export type ServerDTO = {
     ip: string
