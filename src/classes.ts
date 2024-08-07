@@ -38,8 +38,15 @@ export class GameServer {
     }
 
     async updateState(): Promise<void> {
+        const url = new URL(
+            `/bf2/v1/servers/${this.ip}:${this.port}`,
+            'https://api.bflist.io'
+        );
+
         try {
-            const resp = await axios.get(`https://api.bflist.io/bf2/v1/servers/${this.ip}:${this.port}`);
+            const resp = await axios.get(url.toString(), {
+                timeout: Config.REQUEST_TIMEOUT
+            });
             const state = resp.data;
             this.name = state.name;
             this.numPlayers = state.numPlayers;
