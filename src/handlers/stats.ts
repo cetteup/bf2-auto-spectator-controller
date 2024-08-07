@@ -107,7 +107,7 @@ export const active: CommandHandler = {
             response = `Battlefield 2 is still active. Right now, ${livestats.players} players are playing it online.`;
         }
         catch (e: any) {
-            handlerLogger.error('Failed to fetch live concurrent player stats');
+            handlerLogger.error('Failed to fetch live concurrent player stats', e.message);
             response = 'Sorry, failed to fetch live concurrent player stats';
         }
 
