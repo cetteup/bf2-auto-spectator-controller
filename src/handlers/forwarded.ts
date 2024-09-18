@@ -45,6 +45,15 @@ export const next: CommandHandler = {
     }
 };
 
+export const previous: CommandHandler = {
+    identifier: 'prev',
+    aliases: ['n', 'last'],
+    permittedRoles: [Role.Viewer],
+    execute: (client, io) => {
+        return forwardSpectatorCommand(client, io, 'previous_player');
+    }
+};
+
 export const respawn: CommandHandler = {
     identifier: 'respawn',
     permittedRoles: [Role.VIP, Role.Moderator],

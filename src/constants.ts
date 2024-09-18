@@ -9,6 +9,7 @@ export default abstract class Constants {
         rotation_pause: 'Roger, will stay on current player for 5 minutes',
         rotation_resume: 'Confirmed, resuming player rotation',
         next_player: 'Right away, skipping to next player',
+        previous_player: 'You must like that player, going back',
         respawn: 'Alright, will spawn and restart spectating shortly',
         rejoin: 'Sure, will disconnect and rejoin server momentarily'
     };

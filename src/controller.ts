@@ -14,7 +14,7 @@ import {
     ServerDTO,
     TwitchTokenResponse
 } from './typing';
-import { debug, next, rejoin, respawn, restart, resume, start, stay, stop } from './handlers/forwarded';
+import { debug, next, previous, rejoin, respawn, restart, resume, start, stay, stop } from './handlers/forwarded';
 import { ignore, join, joinserver, map, notice, players, server, since, team, top } from './handlers/managed';
 import { active, stats, summary } from './handlers/stats';
 import { GameServer } from './classes';
@@ -71,7 +71,7 @@ class Controller {
         });
 
         this.handlers = [
-            start, stop, debug, next, respawn, restart, rejoin, resume, stay,
+            start, stop, debug, next, previous, respawn, restart, rejoin, resume, stay,
             joinserver, ignore, notice, server, since, join, players, top, map, team,
             stats, summary, active
         ];
@@ -362,7 +362,7 @@ class Controller {
             });
         });
     }
-    
+
     public addCustomCommandHandlers(): void {
         const customCommands = loadConfig<CustomCommand>('custom-commands.yaml', 'custom-commands.schema.json');
         for (const command of customCommands) {
@@ -376,7 +376,7 @@ class Controller {
             });
         }
     }
-    
+
     private removeObsoleteRotationServers(): void {
         const { currentServer, serverToJoin, rotationServers } = this.state;
         this.state.rotationServers = rotationServers.filter((s) => {

@@ -12,6 +12,7 @@ export type SpectatorCommand =
     | 'rotation_pause'
     | 'rotation_resume'
     | 'next_player'
+    | 'previous_player'
     | 'respawn'
     | 'join'
     | 'rejoin'
