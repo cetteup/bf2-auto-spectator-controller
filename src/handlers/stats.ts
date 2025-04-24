@@ -26,11 +26,20 @@ export const stats: CommandHandler = {
             return;
         }
 
+        // Bad Company, 1943 and Bad Company 2 only have the archive source left
+        // https://statbits.io/changelog/#december-9-2023
+        let source;
+        if (['bfbc', 'bf1943', 'bfbc2'].includes(game)) {
+            source = 'archive';
+        } else {
+            source = 'stats';
+        }
+
         let response: string;
         try {
             const url = buildStatbitsURL(
                 game ?? 'bf2',
-                'stats',
+                source,
                 platform ?? 'bf2hub',
                 playerName,
                 'summary-short-a'
