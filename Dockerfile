@@ -4,7 +4,7 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm install --update-notifier=false
+RUN npm ci
 
 ADD . /usr/src/app
 
