@@ -1,5 +1,5 @@
 import { GameServer } from './classes';
-import { Role } from './permissions';
+import { Role } from './chat/permissions';
 import Queue from './queue';
 import { DateTime } from 'luxon';
 import { GamePhase } from './spectator';

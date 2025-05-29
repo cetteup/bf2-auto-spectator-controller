@@ -1,7 +1,7 @@
 import * as socketio from 'socket.io';
 import * as tmi from 'tmi.js';
 import { Role } from '../permissions';
-import { ControllerState } from '../types';
+import { ControllerState } from '../../types';
 
 export type CommandHandler = {
     identifier: string

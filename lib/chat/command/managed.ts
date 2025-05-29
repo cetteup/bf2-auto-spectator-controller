@@ -1,9 +1,9 @@
 import { CommandHandler } from './types';
 import { Role } from '../permissions';
 import * as net from 'net';
-import Config from '../config';
-import { formatDuration, isValidPort } from '../utils';
-import { GameServer } from '../classes';
+import Config from '../../config';
+import { formatDuration, isValidPort } from './utils';
+import { GameServer } from '../../classes';
 import { handlerLogger } from './logger';
 
 export const joinserver: CommandHandler = {

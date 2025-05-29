@@ -1,5 +1,5 @@
 import * as tmi from 'tmi.js';
-import logger from './logger';
+import logger from '../logger';
 
 const authLogger = logger.getChildLogger({ name: 'AuthLogger' });
 

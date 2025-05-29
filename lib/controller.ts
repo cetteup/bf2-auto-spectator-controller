@@ -3,7 +3,7 @@ import * as tmi from 'tmi.js';
 import * as http from 'http';
 import Config from './config';
 import logger from './logger';
-import { authorize } from './permissions';
+import { authorize } from './chat/permissions';
 import { ControllerState, CustomCommand, ServerConfig, TwitchTokenResponse } from './types';
 import { GameServer } from './classes';
 import { Logger } from 'tslog';
@@ -26,6 +26,7 @@ import {
     notice,
     players,
     rejoin,
+    restart,
     respawn,
     resume,
     server,
@@ -37,8 +38,7 @@ import {
     summary,
     team,
     top
-} from './handler';
-import { restart } from './handler/forwarded';
+} from './chat/command';
 
 class Controller {
     private provider: IStateProvider;

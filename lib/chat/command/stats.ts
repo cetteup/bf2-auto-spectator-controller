@@ -1,6 +1,6 @@
 import { CommandHandler } from './types';
 import { Role } from '../permissions';
-import Config from '../config';
+import Config from '../../config';
 import axios from 'axios';
 import { handlerLogger } from './logger';
 

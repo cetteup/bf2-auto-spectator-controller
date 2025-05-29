@@ -5,7 +5,6 @@ import { Schema, ValidationError, Validator, ValidatorResultError } from 'jsonsc
 import fs from 'fs';
 import logger from './logger';
 import yaml from 'js-yaml';
-import { Duration } from 'luxon';
 import { GamePhase } from './spectator';
 
 export function loadConfig<T>(configFileName: string, schemaFileName: string): T[] {
@@ -46,9 +45,7 @@ export function loadConfig<T>(configFileName: string, schemaFileName: string): T
     }
 }
 
-export function isValidPort(port: number): boolean {
-    return port > 0 && port < 65536;
-}
+
 
 export async function isAccessTokenValid(accessToken: string): Promise<boolean> {
     try {
@@ -67,32 +64,6 @@ export async function isAccessTokenValid(accessToken: string): Promise<boolean> 
 
 export function formatOAuthPassword(accessToken: string) {
     return `oauth:${accessToken}`;
-}
-
-export function formatDuration(duration: Duration): string {
-    const rescaled = duration.rescale();
-    if (rescaled < Duration.fromObject({ minutes: 1 })) {
-        return 'just a moment';
-    }
-
-    const elements: string[] = [];
-    const hours = rescaled.get('hours');
-    if (hours >= 2) {
-        elements.push(`${hours.toFixed(0)} hours`);
-    }
-    else if (hours >= 1) {
-        elements.push('an hour');
-    }
-
-    const minutes = rescaled.get('minutes');
-    if (minutes >= 2) {
-        elements.push(`${minutes.toFixed(0)} minutes`);
-    }
-    else if (minutes >= 1) {
-        elements.push('a minute');
-    }
-
-    return elements.join(' and ');
 }
 
 export function isRotationEnabledGamePhase(phase: GamePhase): boolean {

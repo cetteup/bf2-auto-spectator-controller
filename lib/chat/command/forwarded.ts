@@ -1,10 +1,10 @@
 import * as socketio from 'socket.io';
 import * as tmi from 'tmi.js';
-import Config from '../config';
-import Constants from '../constants';
+import Config from '../../config';
+import Constants from '../../constants';
 import { CommandHandler } from './types';
 import { Role } from '../permissions';
-import { ForwardedSpectatorCommand, sendSpectatorCommand } from '../spectator';
+import { ForwardedSpectatorCommand, sendSpectatorCommand } from '../../spectator';
 
 async function forwardSpectatorCommand(client: tmi.Client, io: socketio.Server, command: ForwardedSpectatorCommand): Promise<void> {
     sendSpectatorCommand(io, command);

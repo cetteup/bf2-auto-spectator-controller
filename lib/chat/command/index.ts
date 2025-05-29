@@ -6,6 +6,7 @@ export {
     next,
     respawn,
     rejoin,
+    restart,
     resume,
     stay
 } from './forwarded';
