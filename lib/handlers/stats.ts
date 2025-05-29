@@ -1,4 +1,4 @@
-import { CommandHandler } from './typing';
+import { CommandHandler } from './types';
 import { Role } from '../permissions';
 import Config from '../config';
 import axios from 'axios';

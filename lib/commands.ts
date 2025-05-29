@@ -1,5 +1,5 @@
 import * as socketio from 'socket.io';
-import { ServerDTO, SpectatorCommand, SpectatorCommandDTO } from './typing';
+import { ServerDTO, SpectatorCommand, SpectatorCommandDTO } from './types';
 
 export function sendSpectatorCommand(io: socketio.Server, command: Exclude<SpectatorCommand, 'join'>): boolean
 export function sendSpectatorCommand(io: socketio.Server, command: Extract<SpectatorCommand, 'join'>, server: ServerDTO): boolean

@@ -1,4 +1,4 @@
-import { ForwardedSpectatorCommand } from './typing';
+import { ForwardedSpectatorCommand } from './types';
 
 export default abstract class Constants {
     static readonly COMMAND_RESPONSES: Record<ForwardedSpectatorCommand, string> = {

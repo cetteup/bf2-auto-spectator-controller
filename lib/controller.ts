@@ -3,7 +3,7 @@ import * as tmi from 'tmi.js';
 import * as http from 'http';
 import Config from './config';
 import logger from './logger';
-import { CommandHandler } from './handlers/typing';
+import { CommandHandler } from './handlers/types';
 import { authorize } from './permissions';
 import {
     ControllerState,
@@ -13,7 +13,7 @@ import {
     ServerConfig,
     ServerDTO,
     TwitchTokenResponse
-} from './typing';
+} from './types';
 import { debug, next, rejoin, respawn, restart, resume, start, stay, stop } from './handlers/forwarded';
 import { ignore, join, joinserver, map, notice, players, server, since, team, top } from './handlers/managed';
 import { active, stats, summary } from './handlers/stats';

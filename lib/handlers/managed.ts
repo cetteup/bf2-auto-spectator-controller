@@ -1,4 +1,4 @@
-import { CommandHandler } from './typing';
+import { CommandHandler } from './types';
 import { Role } from '../permissions';
 import * as net from 'net';
 import Config from '../config';

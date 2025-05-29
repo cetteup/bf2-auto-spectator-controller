@@ -1,6 +1,6 @@
 import Config from './config';
 import logger from './logger';
-import { RotationConditionSet, RotationConfig } from './typing';
+import { RotationConditionSet, RotationConfig } from './types';
 import { DateTime, Duration } from 'luxon';
 import * as socketio from 'socket.io';
 import Queue from './queue';

@@ -6,7 +6,7 @@ import fs from 'fs';
 import logger from './logger';
 import yaml from 'js-yaml';
 import { Duration } from 'luxon';
-import { GamePhase } from './typing';
+import { GamePhase } from './types';
 
 export function loadConfig<T>(configFileName: string, schemaFileName: string): T[] {
     const configPath = path.join(Config.ROOT_DIR, configFileName);
