@@ -2,7 +2,7 @@ import { CommandHandler } from './types';
 import { Role } from '../permissions';
 import Config from '../config';
 import axios from 'axios';
-import { handlerLogger } from './common';
+import { handlerLogger } from './logger';
 
 function buildStatbitsURL(game: string, source: string, platform: string, playerName: string, endpoint: string): string {
     // Encode all (potentially) user-provided strings

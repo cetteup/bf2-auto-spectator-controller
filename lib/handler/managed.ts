@@ -4,7 +4,7 @@ import * as net from 'net';
 import Config from '../config';
 import { formatDuration, isValidPort } from '../utils';
 import { GameServer } from '../classes';
-import { handlerLogger } from './common';
+import { handlerLogger } from './logger';
 
 export const joinserver: CommandHandler = {
     identifier: 'joinserver',

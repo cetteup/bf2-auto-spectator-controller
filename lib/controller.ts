@@ -3,17 +3,8 @@ import * as tmi from 'tmi.js';
 import * as http from 'http';
 import Config from './config';
 import logger from './logger';
-import { CommandHandler } from './handlers/types';
 import { authorize } from './permissions';
-import {
-    ControllerState,
-    CustomCommand,
-    ServerConfig,
-    TwitchTokenResponse
-} from './types';
-import { debug, next, rejoin, respawn, restart, resume, start, stay, stop } from './handlers/forwarded';
-import { ignore, join, joinserver, map, notice, players, server, since, team, top } from './handlers/managed';
-import { active, stats, summary } from './handlers/stats';
+import { ControllerState, CustomCommand, ServerConfig, TwitchTokenResponse } from './types';
 import { GameServer } from './classes';
 import { Logger } from 'tslog';
 import * as cron from 'node-cron';
@@ -23,6 +14,31 @@ import { DateTime, Duration } from 'luxon';
 import Queue from './queue';
 import { IStateProvider, Query, ServerState } from './provider';
 import { GamePhaseDTO, HaltedPhaseDTO, sendSpectatorCommand, ServerDTO } from './spectator';
+import {
+    active,
+    CommandHandler,
+    debug,
+    ignore,
+    join,
+    joinserver,
+    map,
+    next,
+    notice,
+    players,
+    rejoin,
+    respawn,
+    resume,
+    server,
+    since,
+    start,
+    stats,
+    stay,
+    stop,
+    summary,
+    team,
+    top
+} from './handler';
+import { restart } from './handler/forwarded';
 
 class Controller {
     private provider: IStateProvider;
