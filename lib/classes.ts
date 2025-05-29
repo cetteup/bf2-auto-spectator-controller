@@ -4,8 +4,8 @@ import { RotationConditionSet, RotationConfig } from './types';
 import { DateTime, Duration } from 'luxon';
 import * as socketio from 'socket.io';
 import Queue from './queue';
-import { sendSpectatorCommand } from './commands';
 import { ServerState } from './provider';
+import { sendSpectatorCommand } from './spectator';
 
 export class GameServer {
     ip: string;

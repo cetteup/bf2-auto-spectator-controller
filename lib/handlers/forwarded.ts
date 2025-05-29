@@ -4,8 +4,7 @@ import Config from '../config';
 import Constants from '../constants';
 import { CommandHandler } from './types';
 import { Role } from '../permissions';
-import { sendSpectatorCommand } from '../commands';
-import { ForwardedSpectatorCommand } from '../types';
+import { ForwardedSpectatorCommand, sendSpectatorCommand } from '../spectator';
 
 export async function forwardSpectatorCommand(client: tmi.Client, io: socketio.Server, command: ForwardedSpectatorCommand): Promise<void> {
     sendSpectatorCommand(io, command);

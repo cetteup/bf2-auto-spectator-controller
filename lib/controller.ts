@@ -8,10 +8,7 @@ import { authorize } from './permissions';
 import {
     ControllerState,
     CustomCommand,
-    GamePhaseDTO,
-    HaltedPhaseDTO,
     ServerConfig,
-    ServerDTO,
     TwitchTokenResponse
 } from './types';
 import { debug, next, rejoin, respawn, restart, resume, start, stay, stop } from './handlers/forwarded';
@@ -23,9 +20,9 @@ import * as cron from 'node-cron';
 import axios from 'axios';
 import { formatOAuthPassword, isAccessTokenValid, isRotationEnabledGamePhase, loadConfig } from './utils';
 import { DateTime, Duration } from 'luxon';
-import { sendSpectatorCommand } from './commands';
 import Queue from './queue';
 import { IStateProvider, Query, ServerState } from './provider';
+import { GamePhaseDTO, HaltedPhaseDTO, sendSpectatorCommand, ServerDTO } from './spectator';
 
 class Controller {
     private provider: IStateProvider;
@@ -187,7 +184,7 @@ class Controller {
         await this.runServerRotationSelection();
     }
 
-    private async handleHaltedPhaseEntered({ server: { ip, port, password } }: HaltedPhaseDTO): Promise<void> {
+    private async handleHaltedPhaseEntered({ server: { ip, port, password }}: HaltedPhaseDTO): Promise<void> {
         const server = this.state.rotationServers.find((s) => {
             return s.ip == ip && s.port == Number(port) && s.password == password;
         });
