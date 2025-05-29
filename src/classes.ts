@@ -1,11 +1,11 @@
-import axios from 'axios';
 import Config from './config';
 import logger from './logger';
-import { RotationConditionSet, RotationConfig, ServerDTO } from './typing';
+import { RotationConditionSet, RotationConfig } from './typing';
 import { DateTime, Duration } from 'luxon';
 import * as socketio from 'socket.io';
 import Queue from './queue';
 import { sendSpectatorCommand } from './commands';
+import { ServerState } from './provider/provider';
 
 export class GameServer {
     ip: string;
@@ -37,36 +37,22 @@ export class GameServer {
         this.scores = new Queue<number>(Config.ROTATION_SCORE_SAMPLE_SIZE);
     }
 
-    async updateState(): Promise<void> {
-        const url = new URL(
-            `/bf2/v1/servers/${this.ip}:${this.port}`,
-            'https://api.bflist.io'
-        );
+    updateState(state: ServerState): void {
+        this.name = state.name;
+        this.numPlayers = state.numPlayers;
+        this.maxPlayers = state.maxPlayers;
+        this.mapName = state.mapName;
+        this.mapSize = state.mapSize;
+        this.gameType = state.gameType;
+        this.reservedSlots = state.reservedSlots;
+        this.noVehicles = state.noVehicles;
+        this.joinLinkWeb = state.joinLinkWeb;
+        // Add players sorted by score (desc)
+        this.players = state.players.map((p) => new Player(p)).sort((a: Player, b: Player) => {
+            return b.score - a.score;
+        });
 
-        try {
-            const resp = await axios.get(url.toString(), {
-                timeout: Config.REQUEST_TIMEOUT
-            });
-            const state = resp.data;
-            this.name = state.name;
-            this.numPlayers = state.numPlayers;
-            this.maxPlayers = state.maxPlayers;
-            this.mapName = state.mapName;
-            this.mapSize = state.mapSize;
-            this.gameType = state.gameType;
-            this.reservedSlots = state.reservedSlots;
-            this.noVehicles = state.noVehicles;
-            this.joinLinkWeb = state.joinLinkWeb;
-            // Add players sorted by score (desc)
-            this.players = state.players.map((player: IPlayer) => new Player(player)).sort((a: Player, b: Player) => {
-                return b.score - a.score;
-            });
-
-            this.stateLastUpdatedAt = DateTime.now();
-        }
-        catch(e: any) {
-            logger.error('Failed to update game server state', e.message, this.ip, this.port);
-        }
+        this.stateLastUpdatedAt = DateTime.now();
     }
 
     getHumanPlayers(): Array<Player> | undefined {
@@ -219,7 +205,7 @@ export class GameServer {
     }
 }
 
-interface IPlayer {
+export class Player {
     pid: number;
     name: string;
     tag: string;
@@ -227,24 +213,22 @@ interface IPlayer {
     kills: number;
     deaths: number;
     ping: number;
-    teamIndex: number;
-    teamLabel: string;
-    aibot: boolean;
-}
-
-export class Player implements IPlayer {
-    pid: number;
-    name: string;
-    tag: string;
-    score: number;
-    kills: number;
-    deaths: number;
-    ping: number;
-    teamIndex: number;
+    team: number;
     teamLabel: string;
     aibot: boolean;
 
-    constructor({ pid, name, tag, score, kills, deaths, ping, teamIndex, teamLabel, aibot }: IPlayer) {
+    constructor({ pid, name, tag, score, kills, deaths, ping, team, teamLabel, aibot }: {
+        pid: number,
+        name: string,
+        tag: string,
+        score: number,
+        kills: number,
+        deaths: number,
+        ping: number,
+        team: number,
+        teamLabel: string,
+        aibot: boolean
+    }) {
         this.pid = pid;
         this.name = name;
         this.tag = tag;
@@ -252,7 +236,7 @@ export class Player implements IPlayer {
         this.kills = kills;
         this.deaths = deaths;
         this.ping = ping;
-        this.teamIndex = teamIndex;
+        this.team = team;
         this.teamLabel = teamLabel;
         this.aibot = aibot;
     }

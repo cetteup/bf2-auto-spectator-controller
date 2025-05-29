@@ -25,8 +25,11 @@ import { formatOAuthPassword, isAccessTokenValid, isRotationEnabledGamePhase, lo
 import { DateTime, Duration } from 'luxon';
 import { sendSpectatorCommand } from './commands';
 import Queue from './queue';
+import { IStateProvider, Query, ServerState } from './provider/provider';
 
 class Controller {
+    private provider: IStateProvider;
+
     private logger: Logger;
     private chatLogger: Logger;
 
@@ -46,7 +49,9 @@ class Controller {
     private serverStateUpdateTask: cron.ScheduledTask;
     private serverScoreUpdateTask: cron.ScheduledTask;
 
-    constructor() {
+    constructor(provider: IStateProvider) {
+        this.provider = provider;
+
         this.logger = logger.getChildLogger({ name: 'ControllerLogger' });
         this.chatLogger = logger.getChildLogger({ name: 'ChatLogger' });
 
@@ -147,11 +152,29 @@ class Controller {
     }
 
     private async handleServerStateUpdateTask(): Promise<void> {
-        const updates = this.state.rotationServers.map((s) => {
-            this.logger.debug('Updating game server state', s.ip, s.port);
-            return s.updateState();
-        });
-        await Promise.all(updates);
+        // Use a shallow copy of server to avoid issues with servers being added/removed during the update
+        const servers = this.state.rotationServers.slice();
+        const queries: Query[] = servers.map((s) => ({ ip: s.ip, port: s.port }));
+
+        let results: PromiseSettledResult<ServerState>[];
+        try {
+            results = await Promise.allSettled(this.provider.getStates(queries));
+        } catch (e) {
+            const error = e instanceof Error ? e : undefined;
+            this.logger.error('Failed to get game server states', error?.message);
+            return;
+        }
+
+        for (const [index, result] of results.entries()) {
+            const server = servers[index];
+            if (result.status == 'fulfilled') {
+                this.logger.debug('Updating game server state', server.ip, server.port);
+                server.updateState(result.value);
+            } else {
+                const message = result.reason instanceof Error ? result.reason.message : String(result.reason);
+                this.logger.error('Failed to get game server state', server.ip, server.port, message);
+            }
+        }
     }
 
     private async handleServerScoreUpdateTask(): Promise<void> {
