@@ -6,7 +6,7 @@ import { CommandHandler } from './types';
 import { Role } from '../permissions';
 import { ForwardedSpectatorCommand, sendSpectatorCommand } from '../spectator';
 
-export async function forwardSpectatorCommand(client: tmi.Client, io: socketio.Server, command: ForwardedSpectatorCommand): Promise<void> {
+async function forwardSpectatorCommand(client: tmi.Client, io: socketio.Server, command: ForwardedSpectatorCommand): Promise<void> {
     sendSpectatorCommand(io, command);
     await client.say(Config.SPECTATOR_CHANNEL, Constants.COMMAND_RESPONSES[command]);
 }
