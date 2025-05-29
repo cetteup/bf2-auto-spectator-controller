@@ -5,7 +5,7 @@ import { DateTime, Duration } from 'luxon';
 import * as socketio from 'socket.io';
 import Queue from './queue';
 import { sendSpectatorCommand } from './commands';
-import { ServerState } from './provider/provider';
+import { ServerState } from './provider';
 
 export class GameServer {
     ip: string;

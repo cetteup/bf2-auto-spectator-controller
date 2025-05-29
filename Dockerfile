@@ -12,6 +12,6 @@ RUN npm run build-ts
 
 RUN npm prune --omit=dev
 
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/bin/controller.js"]
 
 EXPOSE 8181

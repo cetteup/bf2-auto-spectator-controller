@@ -20,7 +20,7 @@ export type ForwardedSpectatorCommand = Exclude<SpectatorCommand, 'release' | 'j
 
 export type SpectatorCommandDTO = {
     command: SpectatorCommand
-    args: any
+    args: unknown
 }
 
 export type ServerDTO = {

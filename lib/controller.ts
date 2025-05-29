@@ -25,7 +25,7 @@ import { formatOAuthPassword, isAccessTokenValid, isRotationEnabledGamePhase, lo
 import { DateTime, Duration } from 'luxon';
 import { sendSpectatorCommand } from './commands';
 import Queue from './queue';
-import { IStateProvider, Query, ServerState } from './provider/provider';
+import { IStateProvider, Query, ServerState } from './provider';
 
 class Controller {
     private provider: IStateProvider;

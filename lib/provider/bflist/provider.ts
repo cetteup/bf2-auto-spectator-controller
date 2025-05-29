@@ -1,6 +1,7 @@
 import axios from 'axios';
-import { IStateProvider, Query, ServerState } from '../provider';
 import { Server } from './types';
+import { IStateProvider } from '../provider';
+import { Query, ServerState } from '../types';
 
 type Deferred<T> = {
     promise: Promise<T>
