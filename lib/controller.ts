@@ -130,8 +130,8 @@ class Controller {
             };
             this.logger.debug('Successfully refreshed chatbot access token');
         }
-        catch (e: any) {
-            this.logger.error('Failed to refresh chatbot access token:', e.message);
+        catch (error) {
+            this.logger.error('Failed to refresh chatbot access token:', error instanceof Error ? error.message : error);
         }
 
         // We can't really handle any errors during the refresh (e.g. Twitch offline, refresh token invalid),
@@ -159,9 +159,8 @@ class Controller {
         let results: PromiseSettledResult<ServerState>[];
         try {
             results = await Promise.allSettled(this.provider.getStates(queries));
-        } catch (e) {
-            const error = e instanceof Error ? e : undefined;
-            this.logger.error('Failed to get game server states', error?.message);
+        } catch (error) {
+            this.logger.error('Failed to get game server states', error instanceof Error ? error : undefined);
             return;
         }
 
@@ -279,8 +278,8 @@ class Controller {
             try {
                 await this.handleCommand(tags, command, args);
             }
-            catch (e: any) {
-                this.logger.error('Failed to handle command', e.message);
+            catch (error) {
+                this.logger.error('Failed to handle command', error instanceof Error ? error.message : error);
             }
         });
 

@@ -1,7 +1,7 @@
 import axios from 'axios';
 import Config from './config';
 import path from 'path';
-import { Schema, ValidationError, Validator } from 'jsonschema';
+import { Schema, ValidationError, Validator, ValidatorResultError } from 'jsonschema';
 import fs from 'fs';
 import logger from './logger';
 import yaml from 'js-yaml';
@@ -20,8 +20,8 @@ export function loadConfig<T>(configFileName: string, schemaFileName: string): T
         const unparsed = fs.readFileSync(schemaPath, { encoding: 'utf8' });
         schema = JSON.parse(unparsed);
     }
-    catch (e: any) {
-        logger.error('Failed to read/parse schema', schemaPath, e.message);
+    catch (error) {
+        logger.error('Failed to read/parse schema', schemaPath, error instanceof Error ? error.message : error);
         return [];
     }
     
@@ -34,13 +34,13 @@ export function loadConfig<T>(configFileName: string, schemaFileName: string): T
 
         return config;
     }
-    catch (e: any) {
-        if (Array.isArray(e.errors) && e.schema) {
+    catch (error) {
+        if (error instanceof ValidatorResultError && Array.isArray(error.errors) && error.schema) {
             // Log all validation errors if schema validation failed
-            logger.error('Given config does not adhere to schema', configPath, schemaPath, e.errors.map((e: ValidationError) => `${e.property}: ${e.message}`));
+            logger.error('Given config does not adhere to schema', configPath, schemaPath, error.errors.map((e: ValidationError) => `${e.property}: ${e.message}`));
         }
         else {
-            logger.error('Failed to read/parse config file', configPath, e.message);
+            logger.error('Failed to read/parse config file', configPath, error instanceof Error ? error.message : error);
         }
         return [];
     }
@@ -60,7 +60,7 @@ export async function isAccessTokenValid(accessToken: string): Promise<boolean> 
         });
         return true;
     }
-    catch (e) {
+    catch {
         return false;
     }
 }

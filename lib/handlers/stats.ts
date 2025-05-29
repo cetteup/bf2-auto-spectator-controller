@@ -49,8 +49,8 @@ export const stats: CommandHandler = {
             });
             response = resp.data;
         }
-        catch (e: any) {
-            handlerLogger.error('Failed to player stats summary for', playerName, game, platform, e.message);
+        catch (error) {
+            handlerLogger.error('Failed to player stats summary for', playerName, game, platform, error instanceof Error ? error.message : error);
             response = `Sorry, failed to fetch stats for ${playerName}`;
         }
 
@@ -84,8 +84,8 @@ export const summary: CommandHandler = {
             });
             response = resp.data;
         }
-        catch (e: any) {
-            handlerLogger.error('Failed to player stats summary for', playerName, e.message);
+        catch (error) {
+            handlerLogger.error('Failed to player stats summary for', playerName, error instanceof Error ? error.message : error);
             response = `Sorry, failed to fetch live stats for ${playerName}`;
         }
 
@@ -115,8 +115,8 @@ export const active: CommandHandler = {
             const livestats = resp.data as BflistLivestatsDTO;
             response = `Battlefield 2 is still active. Right now, ${livestats.players} players are playing it online.`;
         }
-        catch (e: any) {
-            handlerLogger.error('Failed to fetch live concurrent player stats', e.message);
+        catch (error) {
+            handlerLogger.error('Failed to fetch live concurrent player stats', error instanceof Error ? error.message : error);
             response = 'Sorry, failed to fetch live concurrent player stats';
         }
 

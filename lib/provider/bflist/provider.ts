@@ -80,10 +80,10 @@ export class StateProvider implements IStateProvider {
                     }
                 }
             })
-            .catch((e) => {
+            .catch((error) => {
                 // Reject all promises
                 for (const promise of promises.values()) {
-                    promise.reject(e);
+                    promise.reject(error);
                     promise.state = 'rejected';
                 }
             });
