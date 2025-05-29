@@ -160,7 +160,7 @@ export class GameServer {
     }
 
     getScore(): number {
-        return this.scores.getItems().reduce((acc, val) => acc +  val, 0) / this.scores.getSize();
+        return this.scores.getItems().reduce((acc, val) => acc + val, 0) / this.scores.getSize();
     }
 
     private computeBaseScore(): number {
@@ -193,7 +193,7 @@ export class GameServer {
         // b) keep score from being reduced to 0 if there are no free slots
         return Math.min(1, Math.max(penalty, Config.MAX_FREE_SLOT_PENALTY));
     }
-    
+
     join(io: socketio.Server): void {
         // Reset timestamp to ensure that we don't count time spent previously on a server when re-joining
         this.onServerSince = undefined;

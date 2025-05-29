@@ -8,10 +8,10 @@ import { handlerLogger } from './common';
 
 export const joinserver: CommandHandler = {
     identifier: 'joinserver',
-    aliases: ['switchserver'],
-    permittedRoles: [Role.Moderator],
+    aliases: [ 'switchserver' ],
+    permittedRoles: [ Role.Moderator ],
     execute: async (client, io, state, args) => {
-        const [ip, port, password] = args;
+        const [ ip, port, password ] = args;
 
         if (!net.isIPv4(ip) || !isValidPort(Number(port))) {
             await client.say(Config.SPECTATOR_CHANNEL, 'Usage: !joinserver [ip] [port] [[password]]');
@@ -36,8 +36,7 @@ export const joinserver: CommandHandler = {
                     rotationServer.rotationConfig.ignored = false;
                 }
                 state.serverToJoin = rotationServer;
-            }
-            else {
+            } else {
                 state.serverToJoin = serverToJoin;
                 state.rotationServers.push(serverToJoin);
             }
@@ -54,9 +53,9 @@ export const joinserver: CommandHandler = {
 
 export const ignore: CommandHandler = {
     identifier: 'ignore',
-    permittedRoles: [Role.Moderator],
+    permittedRoles: [ Role.Moderator ],
     execute: async (client, io, state, args) => {
-        const [ip, port] = args;
+        const [ ip, port ] = args;
 
         if (!net.isIPv4(ip) || !isValidPort(Number(port))) {
             await client.say(Config.SPECTATOR_CHANNEL, 'Usage: !ignore [ip] [port]');
@@ -81,9 +80,9 @@ export const ignore: CommandHandler = {
 
 export const notice: CommandHandler = {
     identifier: 'notice',
-    permittedRoles: [Role.Moderator],
+    permittedRoles: [ Role.Moderator ],
     execute: async (client, io, state, args) => {
-        const [ip, port] = args;
+        const [ ip, port ] = args;
 
         if (!net.isIPv4(ip) || !isValidPort(Number(port))) {
             await client.say(Config.SPECTATOR_CHANNEL, 'Usage: !notice [ip] [port]');
@@ -108,8 +107,8 @@ export const notice: CommandHandler = {
 
 export const server: CommandHandler = {
     identifier: 'server',
-    aliases: ['currentserver'],
-    permittedRoles: [Role.Viewer],
+    aliases: [ 'currentserver' ],
+    permittedRoles: [ Role.Viewer ],
     execute: async (client, io, state) => {
         if (!state.currentServer?.hasSpectatorJoined()) {
             await client.say(Config.SPECTATOR_CHANNEL, 'Whoops, spectator is not on a server');
@@ -121,7 +120,7 @@ export const server: CommandHandler = {
 
 export const since: CommandHandler = {
     identifier: 'since',
-    permittedRoles: [Role.Viewer],
+    permittedRoles: [ Role.Viewer ],
     execute: async (client, io, state) => {
         if (!state.currentServer?.hasSpectatorJoined()) {
             await client.say(Config.SPECTATOR_CHANNEL, 'Whoops, spectator is not on a server');
@@ -133,7 +132,7 @@ export const since: CommandHandler = {
 
 export const join: CommandHandler = {
     identifier: 'join',
-    permittedRoles: [Role.Viewer],
+    permittedRoles: [ Role.Viewer ],
     execute: async (client, io, state) => {
         if (!state.currentServer?.hasSpectatorJoined()) {
             await client.say(Config.SPECTATOR_CHANNEL, 'Whoops, spectator is not on a server');
@@ -149,7 +148,7 @@ export const join: CommandHandler = {
 
 export const players: CommandHandler = {
     identifier: 'players',
-    permittedRoles: [Role.Viewer],
+    permittedRoles: [ Role.Viewer ],
     execute: async (client, io, state) => {
         if (!state.currentServer?.hasSpectatorJoined()) {
             await client.say(Config.SPECTATOR_CHANNEL, 'Spectator is not on a server, player summary is not available');
@@ -169,7 +168,7 @@ export const players: CommandHandler = {
 
 export const top: CommandHandler = {
     identifier: 'top',
-    permittedRoles: [Role.Viewer],
+    permittedRoles: [ Role.Viewer ],
     execute: async (client, io, state, args) => {
         if (!state.currentServer?.hasSpectatorJoined()) {
             await client.say(Config.SPECTATOR_CHANNEL, 'Spectator is not on a server, top players are not available');
@@ -194,8 +193,8 @@ export const top: CommandHandler = {
 
 export const map: CommandHandler = {
     identifier: 'map',
-    aliases: ['currentmap'],
-    permittedRoles: [Role.Viewer],
+    aliases: [ 'currentmap' ],
+    permittedRoles: [ Role.Viewer ],
     execute: async (client, io, state) => {
         if (!state.currentServer?.hasSpectatorJoined()) {
             await client.say(Config.SPECTATOR_CHANNEL, 'Whoops, spectator is not on a server');
@@ -207,8 +206,8 @@ export const map: CommandHandler = {
 
 export const team: CommandHandler = {
     identifier: 'team',
-    aliases: ['currentteam'],
-    permittedRoles: [Role.Viewer],
+    aliases: [ 'currentteam' ],
+    permittedRoles: [ Role.Viewer ],
     execute: async (client, io, state) => {
         const team = state.currentServer?.getPlayer(Config.SPECTATOR_NAME)?.teamLabel;
         if (!team) {

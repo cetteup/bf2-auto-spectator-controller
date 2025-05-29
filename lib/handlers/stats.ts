@@ -6,7 +6,7 @@ import { handlerLogger } from './common';
 
 function buildStatbitsURL(game: string, source: string, platform: string, playerName: string, endpoint: string): string {
     // Encode all (potentially) user-provided strings
-    const [g, p, n] = [game, platform, playerName].map((s) => encodeURIComponent(s));
+    const [ g, p, n ] = [ game, platform, playerName ].map((s) => encodeURIComponent(s));
     const url = new URL(
         `/chatmsg/${g}/${source}/${p}/players/${n}/${endpoint}`,
         'https://api.statbits.io'
@@ -17,9 +17,9 @@ function buildStatbitsURL(game: string, source: string, platform: string, player
 
 export const stats: CommandHandler = {
     identifier: 'stats',
-    permittedRoles: [Role.Viewer],
+    permittedRoles: [ Role.Viewer ],
     execute: async (client, io, state, args) => {
-        const [playerName, game, platform] = args;
+        const [ playerName, game, platform ] = args;
 
         if (!playerName) {
             await client.say(Config.SPECTATOR_CHANNEL, 'Usage: !stats [player name] [[game]] [[platform]]');
@@ -29,7 +29,7 @@ export const stats: CommandHandler = {
         // Bad Company, 1943 and Bad Company 2 only have the archive source left
         // https://statbits.io/changelog/#december-9-2023
         let source;
-        if (['bfbc', 'bf1943', 'bfbc2'].includes(game)) {
+        if ([ 'bfbc', 'bf1943', 'bfbc2' ].includes(game)) {
             source = 'archive';
         } else {
             source = 'stats';
@@ -48,8 +48,7 @@ export const stats: CommandHandler = {
                 timeout: Config.REQUEST_TIMEOUT
             });
             response = resp.data;
-        }
-        catch (error) {
+        } catch (error) {
             handlerLogger.error('Failed to player stats summary for', playerName, game, platform, error instanceof Error ? error.message : error);
             response = `Sorry, failed to fetch stats for ${playerName}`;
         }
@@ -60,10 +59,10 @@ export const stats: CommandHandler = {
 
 export const summary: CommandHandler = {
     identifier: 'summary',
-    aliases: ['livestats', 'rndstats'],
-    permittedRoles: [Role.Viewer],
+    aliases: [ 'livestats', 'rndstats' ],
+    permittedRoles: [ Role.Viewer ],
     execute: async (client, io, state, args) => {
-        const [playerName] = args;
+        const [ playerName ] = args;
 
         if (!playerName) {
             await client.say(Config.SPECTATOR_CHANNEL, 'Usage: !summary [player name]');
@@ -83,8 +82,7 @@ export const summary: CommandHandler = {
                 timeout: Config.REQUEST_TIMEOUT
             });
             response = resp.data;
-        }
-        catch (error) {
+        } catch (error) {
             handlerLogger.error('Failed to player stats summary for', playerName, error instanceof Error ? error.message : error);
             response = `Sorry, failed to fetch live stats for ${playerName}`;
         }
@@ -100,8 +98,8 @@ type BflistLivestatsDTO = {
 
 export const active: CommandHandler = {
     identifier: 'active',
-    aliases: ['dead'],
-    permittedRoles: [Role.Viewer],
+    aliases: [ 'dead' ],
+    permittedRoles: [ Role.Viewer ],
     execute: async (client) => {
         let response: string;
         try {
@@ -114,8 +112,7 @@ export const active: CommandHandler = {
             });
             const livestats = resp.data as BflistLivestatsDTO;
             response = `Battlefield 2 is still active. Right now, ${livestats.players} players are playing it online.`;
-        }
-        catch (error) {
+        } catch (error) {
             handlerLogger.error('Failed to fetch live concurrent player stats', error instanceof Error ? error.message : error);
             response = 'Sorry, failed to fetch live concurrent player stats';
         }

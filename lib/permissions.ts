@@ -27,7 +27,7 @@ export function authorize(tags: tmi.ChatUserstate, permittedRoles: Role[], comma
 }
 
 function getRoles(tags: tmi.ChatUserstate): Role[] {
-    const roles = [Role.Viewer];
+    const roles = [ Role.Viewer ];
     if (tags.badges?.broadcaster) {
         roles.push(Role.Broadcaster);
     }

@@ -9,7 +9,7 @@ class Queue<T> {
     }
 
     public push(...items: T[]): void {
-        this.items = [...items, ...this.items].slice(0, this.maxSize);
+        this.items = [ ...items, ...this.items ].slice(0, this.maxSize);
     }
 
     public pop(): T | undefined {

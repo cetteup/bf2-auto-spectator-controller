@@ -31,5 +31,10 @@ rules:
     - error
     - always
     - objectsInObjects: false
+  array-bracket-spacing:
+    - error
+    - always
+    - objectsInArrays: false
+      arraysInArrays: false
   '@typescript-eslint/no-explicit-any':
      - warn

@@ -68,7 +68,7 @@ class Controller {
                 username: Config.CHATBOT_USERNAME,
                 password: () => this.getClientPassword()
             },
-            channels: [Config.SPECTATOR_CHANNEL],
+            channels: [ Config.SPECTATOR_CHANNEL ],
             options: {
                 messagesLogLevel: 'debug'
             },
@@ -129,8 +129,7 @@ class Controller {
                 refresh: data.refresh_token
             };
             this.logger.debug('Successfully refreshed chatbot access token');
-        }
-        catch (error) {
+        } catch (error) {
             this.logger.error('Failed to refresh chatbot access token:', error instanceof Error ? error.message : error);
         }
 
@@ -164,7 +163,7 @@ class Controller {
             return;
         }
 
-        for (const [index, result] of results.entries()) {
+        for (const [ index, result ] of results.entries()) {
             const server = servers[index];
             if (result.status == 'fulfilled') {
                 this.logger.debug('Updating game server state', server.ip, server.port);
@@ -188,15 +187,14 @@ class Controller {
         await this.runServerRotationSelection();
     }
 
-    private async handleHaltedPhaseEntered({ server: { ip, port, password }}: HaltedPhaseDTO): Promise<void> {
+    private async handleHaltedPhaseEntered({ server: { ip, port, password } }: HaltedPhaseDTO): Promise<void> {
         const server = this.state.rotationServers.find((s) => {
             return s.ip == ip && s.port == Number(port) && s.password == password;
         });
 
         if (!server) {
             this.logger.warn('Received halted phase server is not in rotation', ip, port);
-        }
-        else if (!server.rotationConfig.ignored) {
+        } else if (!server.rotationConfig.ignored) {
             this.logger.info('Entered halted phase, ignoring server', ip, port);
             server.rotationConfig.ignored = true;
         }
@@ -250,12 +248,10 @@ class Controller {
                 this.logger.info('Pending server switch in halted phase, sending release command');
                 sendSpectatorCommand(this.io, 'release');
             }
-        }
-        else if (!serverToJoin && timeOnServer) {
+        } else if (!serverToJoin && timeOnServer) {
             const switchPossibleAt = DateTime.now().plus(Config.MINIMUM_TIME_ON_SERVER.minus(timeOnServer));
             this.logger.debug('Server switch not possible yet, not applying server selection before', switchPossibleAt.toUTC().toISO());
-        }
-        else if (serverToJoin) {
+        } else if (serverToJoin) {
             this.logger.debug('Server switch already queued, not applying server selection');
         }
     }
@@ -277,8 +273,7 @@ class Controller {
 
             try {
                 await this.handleCommand(tags, command, args);
-            }
-            catch (error) {
+            } catch (error) {
                 this.logger.error('Failed to handle command', error instanceof Error ? error.message : error);
             }
         });
@@ -308,8 +303,7 @@ class Controller {
                     }
 
                     this.logger.info('Current server updated', ip, port);
-                }
-                else if (!server && this.state.rotationServers.length > 0) {
+                } else if (!server && this.state.rotationServers.length > 0) {
                     // Server rotation is configured => log warning and send spectator back to expected server (if available)
                     this.logger.warn('Received current server is not in rotation', ip, port);
                     // Whatever we currently think the current server is, it turned out to be wrong => reset it
@@ -376,15 +370,14 @@ class Controller {
                             allSelectable: true,
                             ignoreTimeOnServer: true
                         });
-                    }
-                    else {
+                    } else {
                         this.logger.debug('Average time on player is', averageTimeOnPlayer, 'seconds');
                     }
                 }
             });
         });
     }
-    
+
     public addCustomCommandHandlers(): void {
         const customCommands = loadConfig<CustomCommand>('custom-commands.yaml', 'custom-commands.schema.json');
         for (const command of customCommands) {
@@ -398,7 +391,7 @@ class Controller {
             });
         }
     }
-    
+
     private removeObsoleteRotationServers(): void {
         const { currentServer, serverToJoin, rotationServers } = this.state;
         this.state.rotationServers = rotationServers.filter((s) => {
@@ -417,7 +410,7 @@ class Controller {
         }
 
         if (options.length == 1) {
-            const [candidate] = options;
+            const [ candidate ] = options;
             if (candidate.rotationConfig.ignored) {
                 this.logger.warn('Only available rotation server is ignored', candidate.ip, candidate.port);
                 return;
