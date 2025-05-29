@@ -8,7 +8,7 @@ RUN npm ci
 
 ADD . /usr/src/app
 
-RUN npm run build-ts
+RUN npm run build
 
 RUN npm prune --omit=dev
 
