@@ -114,7 +114,7 @@ export const server: CommandHandler = {
             await client.say(Config.SPECTATOR_CHANNEL, 'Whoops, spectator is not on a server');
             return;
         }
-        await client.say(Config.SPECTATOR_CHANNEL, `Currently spectating on: ${state.currentServer.name} - bf2.tv/servers/${state.currentServer.ip}:${state.currentServer.port}`);
+        await client.say(Config.SPECTATOR_CHANNEL, `Currently spectating on: ${state.currentServer.name} - bf2.cx/servers/${state.currentServer.ip}:${state.currentServer.port}`);
     }
 };
 
