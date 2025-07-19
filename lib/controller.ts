@@ -103,17 +103,13 @@ class Controller {
 
         // Update current server's state every 20 seconds
         // (bflist updates at 00, 20 and 40, so get fresh data at 10, 30 and 50)
-        this.serverStateUpdateTask = cron.schedule('10,30,50 * * * * *', async () => {
+        this.serverStateUpdateTask = cron.createTask('10,30,50 * * * * *', async () => {
             await this.handleServerStateUpdateTask();
-        }, {
-            scheduled: false
         });
 
         // Update server scores according to configured interval (interval influences how fast scores change)
-        this.serverScoreUpdateTask = cron.schedule(`*/${Config.ROTATION_SCORE_INTERVAL} * * * *`, async () => {
+        this.serverScoreUpdateTask = cron.createTask(`*/${Config.ROTATION_SCORE_INTERVAL} * * * *`, async () => {
             await this.handleServerScoreUpdateTask();
-        }, {
-            scheduled: false
         });
     }
 
