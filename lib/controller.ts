@@ -437,6 +437,12 @@ class Controller {
                     this.logger.warn('Rotation server is ignored and will be excluded from selection', s.ip, s.port);
                     return false;
                 }
+
+                if (!s.available()) {
+                    this.logger.debug('Rotation server is not available and will be excluded from selection', s.ip, s.port);
+                    return false;
+                }
+
                 return true;
             })
             .map((s) => {

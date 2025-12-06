@@ -90,6 +90,20 @@ export class GameServer {
         return this.ip == other?.ip && this.port == other.port && this.password == other.password;
     }
 
+    available(): boolean {
+        // Temporary servers should never be available as part of the normal rotation
+        if (this.rotationConfig.temporary) {
+            return false;
+        }
+
+        // Don't make server available if state has not recently updated
+        if (!this.stateLastUpdatedAt || DateTime.now().diff(this.stateLastUpdatedAt) > Duration.fromObject({ seconds: 30 })) {
+            return false;
+        }
+
+        return true;
+    }
+
     selectable(): boolean {
         // Move legacy minPlayers condition from config to conditions
         if (this.rotationConfig.minPlayers) {
@@ -104,16 +118,6 @@ export class GameServer {
         // Fallback should *always* be selectable
         if (this.rotationConfig.fallback) {
             return true;
-        }
-
-        // Temporary servers should never be selectable as part of the normal rotation
-        if (this.rotationConfig.temporary) {
-            return false;
-        }
-
-        // Don't make server selectable if state has not recently updated
-        if (!this.stateLastUpdatedAt || DateTime.now().diff(this.stateLastUpdatedAt) > Duration.fromObject({ seconds: 30 })) {
-            return false;
         }
 
         // Don't make server selectable if rolling score average has not reached the desired sample size yet
