@@ -23,7 +23,7 @@
     "tslog": "3.3.4"
   },
   "devDependencies": {
-    "@tsconfig/node18": "18.2.4",
+    "@tsconfig/node18": "18.2.6",
     "@tsconfig/recommended": "1.0.10",
     "@types/jest": "30.0.0",
     "@types/js-yaml": "4.0.9",
