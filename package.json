@@ -23,6 +23,8 @@
     "tslog": "3.3.4"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "3.3.3",
+    "@eslint/js": "9.39.1",
     "@tsconfig/node18": "18.2.6",
     "@tsconfig/recommended": "1.0.13",
     "@types/jest": "30.0.0",
@@ -33,6 +35,7 @@
     "@typescript-eslint/eslint-plugin": "8.48.1",
     "@typescript-eslint/parser": "8.48.1",
     "eslint": "9.39.1",
+    "globals": "16.5.0",
     "jest": "30.2.0",
     "ts-jest": "29.4.6",
     "typescript": "5.9.3"
