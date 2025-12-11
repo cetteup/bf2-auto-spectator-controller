@@ -4,7 +4,7 @@
   "description": "An online controller for the bf2 auto spectator",
   "private": true,
   "engines": {
-    "node": "24.11.1"
+    "node": "24.12.0"
   },
   "scripts": {
     "build": "tsc -b",
