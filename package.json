@@ -20,7 +20,7 @@
     "node-cron": "4.2.1",
     "socket.io": "4.8.1",
     "tmi.js": "1.8.5",
-    "tslog": "3.3.4"
+    "tslog": "4.10.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "3.3.3",
