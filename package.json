@@ -23,7 +23,7 @@
     "tslog": "3.3.4"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "3.3.3",
+    "@eslint/eslintrc": "3.3.4",
     "@eslint/js": "9.39.2",
     "@tsconfig/node18": "18.2.6",
     "@tsconfig/recommended": "1.0.13",
