@@ -4,7 +4,7 @@ import path from 'path';
 import { Schema, ValidationError, Validator, ValidatorResultError } from 'jsonschema';
 import fs from 'fs';
 import logger from './logger';
-import yaml from 'js-yaml';
+import { load } from 'js-yaml';
 import { GamePhase } from './spectator';
 
 export function loadConfig<T>(configFileName: string, schemaFileName: string): T[] {
@@ -26,7 +26,7 @@ export function loadConfig<T>(configFileName: string, schemaFileName: string): T
     
     try {
         const unparsed = fs.readFileSync(configPath, { encoding: 'utf8' });
-        const config = yaml.load(unparsed) as T[];
+        const config = load(unparsed) as T[];
 
         const validator = new Validator();
         validator.validate(config, schema, { throwAll: true });
