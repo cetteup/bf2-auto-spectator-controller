@@ -77,7 +77,7 @@ export const link: CommandHandler = {
                 getStatbitsSource(game ?? 'bf2'),
                 platform ?? 'bf2hub',
                 playerName,
-                'link'
+                '_link'
             );
             const resp = await axios.get(url, {
                 timeout: Config.REQUEST_TIMEOUT
