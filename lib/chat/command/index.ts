@@ -24,6 +24,7 @@ export {
 } from './managed';
 export {
     stats,
+    link,
     summary,
     active
 } from './stats';

@@ -21,6 +21,7 @@ import {
     ignore,
     join,
     joinserver,
+    link,
     map,
     next,
     notice,
@@ -91,7 +92,7 @@ class Controller {
         this.handlers = [
             start, stop, debug, next, respawn, restart, rejoin, resume, stay,
             joinserver, ignore, notice, server, since, join, players, top, map, team,
-            stats, summary, active
+            stats, link, summary, active
         ];
 
         const serverConfigs = loadConfig<ServerConfig>('servers.yaml', 'servers.schema.json');
