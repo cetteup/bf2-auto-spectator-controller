@@ -34,7 +34,7 @@
     "@types/tmi.js": "1.8.6",
     "@typescript-eslint/eslint-plugin": "8.67.0",
     "@typescript-eslint/parser": "8.67.0",
-    "eslint": "10.8.1",
+    "eslint": "10.9.0",
     "globals": "17.11.0",
     "jest": "30.4.2",
     "ts-jest": "29.4.12",
