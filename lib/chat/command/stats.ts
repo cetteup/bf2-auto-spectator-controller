@@ -129,6 +129,7 @@ export const summary: CommandHandler = {
 type BflistLivestatsDTO = {
     servers: number
     players: number
+    coverage: number
 }
 
 export const active: CommandHandler = {
@@ -139,7 +140,7 @@ export const active: CommandHandler = {
         let response: string;
         try {
             const url = new URL(
-                '/bf2/v1/livestats',
+                '/v2/bf2/livestats',
                 'https://api.bflist.io'
             );
             const resp = await axios.get(url.toString(), {
