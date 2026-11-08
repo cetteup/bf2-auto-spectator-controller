@@ -1,13 +1,13 @@
-import { GameServer } from './classes';
+import { Server } from './server';
 import { Role } from './chat/permissions';
 import Queue from './queue';
 import { DateTime } from 'luxon';
 import { GamePhase } from './spectator';
 
 export type ControllerState = {
-    rotationServers: GameServer[]
-    currentServer?: GameServer
-    serverToJoin?: GameServer
+    rotationServers: Server[]
+    currentServer?: Server
+    serverToJoin?: Server
     gamePhase: GamePhase
     playerRotations: Queue<DateTime>
 }

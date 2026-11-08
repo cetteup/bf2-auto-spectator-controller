@@ -56,18 +56,21 @@ export class StateProvider implements IStateProvider {
                             reservedSlots: server.reservedSlots,
                             noVehicles: server.noVehicles,
                             joinLinkWeb: server.joinLinkWeb ?? undefined,
-                            players: server.players.map((p) => ({
-                                pid: p.pid,
-                                name: p.name,
-                                tag: p.tag,
-                                score: p.score,
-                                kills: p.kills,
-                                deaths: p.deaths,
-                                ping: p.ping,
-                                team: p.team,
-                                teamLabel: p.teamLabel,
-                                aibot: p.aibot
-                            }))
+                            // Drop players whose kind cannot be determined (invalid pid)
+                            players: server.players
+                                .filter((p): p is typeof p & { kind: 'human' | 'aibot' | 'bot' | 'seeder' } => p.kind !== 'unknown')
+                                .map((p) => ({
+                                    pid: p.pid,
+                                    name: p.name,
+                                    tag: p.tag,
+                                    score: p.score,
+                                    kills: p.kills,
+                                    deaths: p.deaths,
+                                    ping: p.ping,
+                                    team: p.team,
+                                    teamLabel: p.teamLabel,
+                                    kind: p.kind
+                                }))
                         });
                         promise.state = 'fulfilled';
                     }

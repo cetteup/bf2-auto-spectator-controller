@@ -20,7 +20,7 @@ export type ServerState = {
         ping: number
         team: number
         teamLabel: string
-        aibot: boolean
+        kind: 'human' | 'aibot' | 'bot' | 'seeder'
     }[]
 }
 

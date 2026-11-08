@@ -5,7 +5,7 @@ import Config from './config';
 import logger from './logger';
 import { authorize } from './chat/permissions';
 import { ControllerState, CustomCommand, ServerConfig, TwitchTokenResponse } from './types';
-import { GameServer } from './classes';
+import { Server } from './server';
 import { Logger } from 'tslog';
 import * as cron from 'node-cron';
 import axios from 'axios';
@@ -97,7 +97,7 @@ class Controller {
 
         const serverConfigs = loadConfig<ServerConfig>('servers.yaml', 'servers.schema.json');
         this.state = {
-            rotationServers: serverConfigs.map((s) => new GameServer(s.ip, s.port, s.password, s.rotationConfig)),
+            rotationServers: serverConfigs.map((s) => new Server(s.ip, s.port, s.password, s.rotationConfig)),
             gamePhase: 'initializing',
             playerRotations: new Queue<DateTime>(Config.AVERAGE_TIME_ON_PLAYER_SAMPLE_SIZE)
         };
@@ -413,7 +413,7 @@ class Controller {
         });
     }
 
-    private selectRotationServer(options: GameServer[], allSelectable = false): GameServer | undefined {
+    private selectRotationServer(options: Server[], allSelectable = false): Server | undefined {
         if (options.length == 0) {
             this.logger.warn('No servers in rotation');
             return;

@@ -3,7 +3,7 @@ import { Role } from '../permissions';
 import * as net from 'net';
 import Config from '../../config';
 import { formatDuration, isValidPort } from './utils';
-import { GameServer } from '../../classes';
+import { Server } from '../../server';
 import { handlerLogger } from './logger';
 
 export const joinserver: CommandHandler = {
@@ -18,7 +18,7 @@ export const joinserver: CommandHandler = {
             return;
         }
 
-        const serverToJoin = new GameServer(ip, Number(port), password, {
+        const serverToJoin = new Server(ip, Number(port), password, {
             temporary: true
         });
         const onCurrentServer = !!state.currentServer?.getPlayer(Config.SPECTATOR_NAME);

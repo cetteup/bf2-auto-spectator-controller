@@ -6,8 +6,9 @@ import * as socketio from 'socket.io';
 import Queue from './queue';
 import { ServerState } from './provider';
 import { sendSpectatorCommand } from './spectator';
+import { isBot, Player } from './player';
 
-export class GameServer {
+export class Server {
     ip: string;
     port: number;
     password: string | null;
@@ -48,19 +49,17 @@ export class GameServer {
         this.noVehicles = state.noVehicles;
         this.joinLinkWeb = state.joinLinkWeb;
         // Add players sorted by score (desc)
-        this.players = state.players.map((p) => new Player(p)).sort((a: Player, b: Player) => {
-            return b.score - a.score;
-        });
+        this.players = [ ...state.players ].sort((a, b) => b.score - a.score);
 
         this.stateLastUpdatedAt = DateTime.now();
     }
 
     getHumanPlayers(): Array<Player> | undefined {
-        return this.players?.filter(player => !player.isBot());
+        return this.players?.filter(player => !isBot(player));
     }
 
     getBots(): Array<Player> | undefined {
-        return this.players?.filter(player => player.isBot());
+        return this.players?.filter(player => isBot(player));
     }
 
     getActivePlayers(): Array<Player> | undefined {
@@ -86,7 +85,7 @@ export class GameServer {
         return this.getTimeOnServer() != undefined;
     }
 
-    equals(other?: GameServer): boolean {
+    equals(other?: Server): boolean {
         return this.ip == other?.ip && this.port == other.port && this.password == other.password;
     }
 
@@ -206,46 +205,5 @@ export class GameServer {
             port: this.port.toString(),
             password: this.password
         });
-    }
-}
-
-export class Player {
-    pid: number;
-    name: string;
-    tag: string;
-    score: number;
-    kills: number;
-    deaths: number;
-    ping: number;
-    team: number;
-    teamLabel: string;
-    aibot: boolean;
-
-    constructor({ pid, name, tag, score, kills, deaths, ping, team, teamLabel, aibot }: {
-        pid: number,
-        name: string,
-        tag: string,
-        score: number,
-        kills: number,
-        deaths: number,
-        ping: number,
-        team: number,
-        teamLabel: string,
-        aibot: boolean
-    }) {
-        this.pid = pid;
-        this.name = name;
-        this.tag = tag;
-        this.score = score;
-        this.kills = kills;
-        this.deaths = deaths;
-        this.ping = ping;
-        this.team = team;
-        this.teamLabel = teamLabel;
-        this.aibot = aibot;
-    }
-
-    isBot(): boolean {
-        return this.aibot || this.name === Config.SPECTATOR_NAME || !(this.ping > 0 || this.score !== 0 || this.kills !== 0 || this.deaths !== 0);
     }
 }
