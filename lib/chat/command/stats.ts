@@ -126,12 +126,6 @@ export const summary: CommandHandler = {
     }
 };
 
-type BflistLivestatsDTO = {
-    servers: number
-    players: number
-    coverage: number
-}
-
 export const active: CommandHandler = {
     identifier: 'active',
     aliases: [ 'dead' ],
@@ -143,11 +137,15 @@ export const active: CommandHandler = {
                 '/v2/bf2/livestats',
                 'https://api.bflist.io'
             );
-            const resp = await axios.get(url.toString(), {
+            const resp = await axios.get<{
+                servers: number
+                players: number
+                coverage: number
+            }>(url.toString(), {
                 timeout: Config.REQUEST_TIMEOUT
             });
-            const livestats = resp.data as BflistLivestatsDTO;
-            response = `Battlefield 2 is still active. Right now, ${livestats.players} players are playing it online.`;
+            const { players } = resp.data;
+            response = `Battlefield 2 is still active. Right now, ${players} players are playing it online.`;
         } catch (error) {
             handlerLogger.error('Failed to get live concurrent player stats', error instanceof Error ? error.message : error);
             response = 'Sorry, failed to fetch live concurrent player stats';
