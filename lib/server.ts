@@ -9,22 +9,13 @@ import { sendSpectatorCommand } from './spectator';
 import { isBot, Player } from './player';
 
 export class Server {
-    ip: string;
-    port: number;
-    password: string | null;
-    rotationConfig: RotationConfig;
+    public readonly ip: string;
+    public readonly port: number;
+    public readonly password: string | null;
+    public readonly rotationConfig: RotationConfig;
 
-    stateLastUpdatedAt: DateTime | undefined;
-    name: string | undefined;
-    numPlayers: number | undefined;
-    maxPlayers: number | undefined;
-    mapName: string | undefined;
-    mapSize: number | undefined;
-    gameType: string | undefined;
-    reservedSlots: number | undefined;
-    noVehicles: boolean | undefined;
-    joinLinkWeb: string | undefined;
-    players: Array<Player> | undefined;
+    private state?: ServerState;
+    private stateLastUpdatedAt: DateTime | undefined;
 
     private onServerSince: DateTime | undefined;
     private scores: Queue<number>;
@@ -39,27 +30,20 @@ export class Server {
     }
 
     updateState(state: ServerState): void {
-        this.name = state.name;
-        this.numPlayers = state.numPlayers;
-        this.maxPlayers = state.maxPlayers;
-        this.mapName = state.mapName;
-        this.mapSize = state.mapSize;
-        this.gameType = state.gameType;
-        this.reservedSlots = state.reservedSlots;
-        this.noVehicles = state.noVehicles;
-        this.joinLinkWeb = state.joinLinkWeb;
-        // Add players sorted by score (desc)
-        this.players = [ ...state.players ].sort((a, b) => b.score - a.score);
-
+        const { players, ...rest } = state;
+        this.state = {
+            players: players.sort((a, b) => b.score - a.score || b.kills - a.kills || a.deaths - b.deaths || a.name.localeCompare(b.name)),
+            ...rest,
+        };
         this.stateLastUpdatedAt = DateTime.now();
     }
 
     getHumanPlayers(): Array<Player> | undefined {
-        return this.players?.filter(player => !isBot(player));
+        return this.state?.players?.filter(player => !isBot(player));
     }
 
     getBots(): Array<Player> | undefined {
-        return this.players?.filter(player => isBot(player));
+        return this.state?.players?.filter(player => isBot(player));
     }
 
     getActivePlayers(): Array<Player> | undefined {
@@ -67,7 +51,7 @@ export class Server {
     }
 
     getPlayer(name: string): Player | undefined {
-        return this.players?.find((p: Player) => p.name == name);
+        return this.state?.players?.find((p: Player) => p.name == name);
     }
 
     startTimeOnServer(): void {
@@ -138,15 +122,16 @@ export class Server {
             return false;
         }
 
-        if (conditions.mapNames && this.mapName && !conditions.mapNames.includes(this.mapName)) {
+        const { mapName, gameType, noVehicles } = this.state ?? {};
+        if (conditions.mapNames && mapName && !conditions.mapNames.includes(mapName)) {
             return false;
         }
 
-        if (conditions.gameTypes && this.gameType && !conditions.gameTypes.includes(this.gameType)) {
+        if (conditions.gameTypes && gameType && !conditions.gameTypes.includes(gameType)) {
             return false;
         }
 
-        if (conditions.noVehicles !== undefined && this.noVehicles != conditions.noVehicles) {
+        if (conditions.noVehicles !== undefined && noVehicles != conditions.noVehicles) {
             return false;
         }
 
@@ -186,9 +171,9 @@ export class Server {
             return 1;
         }
 
-        const numPlayers = this.numPlayers ?? 0;
-        const maxPlayers = this.maxPlayers ?? 1;
-        const reservedSlots = this.reservedSlots ?? 0;
+        const numPlayers = this.state?.players?.length ?? 0;
+        const maxPlayers = this.state?.maxPlayers ?? 1;
+        const reservedSlots = this.state?.reservedSlots ?? 0;
         const penalty = (maxPlayers - numPlayers - reservedSlots) / ((1 - Config.FREE_SLOT_SCORE_PENALTY_THRESHOLD) * maxPlayers);
 
         // Limit value range to
