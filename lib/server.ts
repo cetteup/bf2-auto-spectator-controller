@@ -38,6 +38,30 @@ export class Server {
         this.stateLastUpdatedAt = DateTime.now();
     }
 
+    get name(): string | undefined {
+        return this.state?.name;
+    }
+
+    get maxPlayers(): number | undefined {
+        return this.state?.maxPlayers;
+    }
+
+    get mapName(): string | undefined {
+        return this.state?.mapName;
+    }
+
+    get mapSize(): number | undefined {
+        return this.state?.mapSize;
+    }
+
+    get players(): Array<Player> | undefined {
+        return this.state?.players;
+    }
+
+    get joinLinkWeb(): string | undefined {
+        return this.state?.joinLinkWeb;
+    }
+
     getHumanPlayers(): Array<Player> | undefined {
         return this.state?.players?.filter(player => !isBot(player));
     }
