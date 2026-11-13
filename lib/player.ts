@@ -10,7 +10,7 @@ export type Player = {
     ping: number;
     team: number;
     teamLabel: string;
-    kind: 'human' | 'aibot' | 'bot' | 'seeder';
+    kind: 'human' | 'aibot' | 'bot' | 'spectator' | 'seeder';
 };
 
 export function isBot(player: Player): boolean {
